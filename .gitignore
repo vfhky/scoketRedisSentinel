@@ -1,0 +1,12 @@
+.git
+*.o
+*.obj
+*.tags
+*.exe
+*.out
+*.svn
+*.log
+.vscode
+*.zip
+*.rar
+bin/*
