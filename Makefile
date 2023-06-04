@@ -90,7 +90,8 @@ $(foreach dirname,$(sort $(PRG_INC_DIR) $(PRG_BIN_DIR) $(PRG_LIB_DIR)),\
 # Complie and link variables. LD_LIBS means the dynamic or static library needed for the object file.
 CFLAGS     	:= $(if $(DEBUG),-g -Wall, -O2 -Wall)
 CFLAGS     	+= $(if $(GEN_DYN_LIB), $(addprefix -fPIC -I ,$(sort $(dir $(SRC_H)))), $(addprefix -I ,$(sort $(dir $(SRC_H)))))
-CXXFLAGS   	= $(CFLAGS)
+# -D_SOCKET_TIMEOUT_SELECT or -D_SOCKET_TIMEOUT_POLL (witch is default)
+CXXFLAGS   	= $(CFLAGS) -D_SOCKET_TIMEOUT_POLL
 LDFLAGS    	:=
 LD_LIB_DIR 	:= #-L $(PRG_LIB_DIR)
 LD_LIBS	   	:= #-lprintnolog

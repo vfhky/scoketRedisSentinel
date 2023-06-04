@@ -73,11 +73,10 @@ namespace myRedisSentinel {
         char buffer[4096*10] = {0x00};
 
 
-
+#ifdef _SOCKET_TIMEOUT_SELECT
         fd_set readFds;
         FD_ZERO(&readFds);
         FD_SET(m_client_fd, &readFds);
-
 
         struct timeval tv;
         tv.tv_sec = 0;
@@ -110,6 +109,40 @@ namespace myRedisSentinel {
                 }
             }
         }
+#else
+        struct pollfd fds[1];
+        fds[0].fd = m_client_fd;
+        fds[0].events = POLLIN;
+
+        int timeOutMils = 200;
+        while (true) {
+            int ret = poll(fds, 1, timeOutMils);
+            if (-1 == ret) {
+                std::cout << "[" << __FILE__ << ":" << __LINE__ << "]" << " poll error" << std::endl;
+                break;
+            } else if (ret == 0) {
+                // std::cout << "[" << __FILE__ << ":" << __LINE__ << "]" << " poll timeout" << std::endl;
+                break;
+            } else {
+                if (fds[0].revents & POLLIN) {
+                    char bufferTmp[4096] = {0x00};
+                    memset(bufferTmp, 0, sizeof(bufferTmp));
+                    int len = ::recv(m_client_fd, bufferTmp, sizeof(bufferTmp), 0);
+                    if (len > 0) {
+                        //std::cout << "[" << __FILE__ << ":" << __LINE__ << "]" << " len=[" << len << "] recv ok bufferTmp=[" << bufferTmp << "]" << std::endl;
+                        bufferTmp[len] = '\0';
+                        memcpy(buffer + strlen(buffer), bufferTmp, strlen(bufferTmp));
+                    } else if (len < 0) {
+                        std::cout << "[" << __FILE__ << ":" << __LINE__ << "]" << " len=[" << len << "] connection closed" << std::endl;
+                        return false;
+                    } else {
+                        std::cout << "[" << __FILE__ << ":" << __LINE__ << "]" << " len=[" << len << "] no more data to read" << std::endl;
+                        break;
+                    }
+                }
+            }
+        }
+#endif
 
         message = buffer;
 
