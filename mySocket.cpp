@@ -97,7 +97,7 @@ namespace myRedisSentinel {
                     memset(bufferTmp, 0, sizeof(bufferTmp));
                     int len = ::recv(m_client_fd, bufferTmp, sizeof(bufferTmp), 0);
                     if(len > 0) {
-                        std::cout << "[" << __FILE__ << ":" << __LINE__ << "]" << " len=[" << len << "] recv ok bufferTmp=[" << bufferTmp << "]" << std::endl;
+                        //std::cout << "[" << __FILE__ << ":" << __LINE__ << "]" << " len=[" << len << "] recv ok bufferTmp=[" << bufferTmp << "]" << std::endl;
                         bufferTmp[len] = '\0';
                         memcpy(buffer + strlen(buffer), bufferTmp, strlen(bufferTmp));
                     } else if (len < 0) {
@@ -115,19 +115,6 @@ namespace myRedisSentinel {
 
         //std::cout << "[" << __FILE__ << ":" << __LINE__ << "]" << " ====> total message=[" << message << "]" << std::endl;
         return true;
-    }
-
-    int MySocket::selectTimeOut(const int &sec, const int &usec) {
-        fd_set rset;
-        struct timeval tv;
-
-        FD_ZERO(&rset);
-        FD_SET(m_client_fd, &rset);
-
-        tv.tv_sec = sec;
-        tv.tv_usec = usec;
-
-        return select(m_client_fd+1, &rset, NULL, NULL, &tv);
     }
 
     void MySocket::close() {

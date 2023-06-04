@@ -25,8 +25,6 @@ namespace myRedisSentinel {
 
         bool recv(string &message);
 
-        int selectTimeOut(const int &sec, const int &usec);
-
         void close();
 
         int getClientFd();

@@ -276,7 +276,7 @@ namespace myRedisSentinel {
             std::cout << "[" << __FILE__ << ":" << __LINE__ << "]" << ", slaveNums=[" <<slaveNums << "] not equal slaveList.size=[" << slaveList.size() << "]" << std::endl;
             slaveList.clear();
         } else {
-            std::cout << "[" << __FILE__ << ":" << __LINE__ << "]" << ", slaveNums=[" <<slaveNums << "] slaveList.size=[" << slaveList.size() << "]" << std::endl;
+            //std::cout << "[" << __FILE__ << ":" << __LINE__ << "]" << ", slaveNums=[" <<slaveNums << "] slaveList.size=[" << slaveList.size() << "]" << std::endl;
         }
 
         return slaveList;
@@ -302,7 +302,7 @@ namespace myRedisSentinel {
 
                 // 过滤以 $ 或者 # 开头的内容
                 if(key.str()[0] == '$' || key.str()[0] == '#') {
-                    std::cout << "[" << __FILE__ << ":" << __LINE__ << "]" << ", key=[" << key.str() << "] filter" << std::endl;
+                    //std::cout << "[" << __FILE__ << ":" << __LINE__ << "]" << ", key=[" << key.str() << "] filter" << std::endl;
                     key.str("");
                     key.clear();
                     continue;
