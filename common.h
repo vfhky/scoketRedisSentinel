@@ -25,10 +25,14 @@
 
 
 
+#ifndef  _MSC_VER
 
+#define __STDC_FORMAT_MACROS
+#include <stdint.h>
+#include <inttypes.h>
+#include <sys/types.h>
 
-
-
+#else	// NOT _MSC_VER
 #ifdef	    __GNUC__
 /* FreeBSD has these C99 int types defined in /sys/inttypes.h already */
 #ifndef     _SYS_INTTYPES_H_
@@ -51,6 +55,9 @@ typedef unsigned short uint16_t;
 typedef unsigned int uint32_t;
 typedef unsigned __int64 uint64_t;
 #endif
+
+#endif	// _MSC_VER END
+
 
 
 
@@ -88,4 +95,5 @@ enum LogLevel{
 
 
 #endif
+
 
