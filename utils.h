@@ -256,6 +256,28 @@ namespace scoketRedisSentinel {
             return printOneDimensionTextContainer(tc);
         }
 
+        // print list,vector,etc. of a map
+        template<typename TListOfMap >
+        static string printListOfMap(const TListOfMap & tc, const string &split = " ")
+        {
+            stringstream ss;
+            ss << "{";
+            typename TListOfMap::const_iterator it;
+            for ( it = tc.begin(); it != tc.end(); ++it )
+            {
+                if ( it == tc.begin() )
+                {
+                    ss << printMap(*it);
+                }
+                else
+                {
+                    ss << ", " << printMap(*it);
+                }
+            }
+            ss << "}";
+            return ss.str();
+        }
+
         template<typename T>
         static string toString( const T& from )
         {

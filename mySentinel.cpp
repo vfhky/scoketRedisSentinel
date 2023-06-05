@@ -47,11 +47,11 @@ namespace scoketRedisSentinel {
 
 
     // 解析所有的master ip:port
-    map<string,string> MySentinel::getMaster() {
-        map<string,string> masterMap;
+    list<RedisInfo> MySentinel::getMaster() {
+        list<RedisInfo> masterList;
         string redisInfo = this->getRedisInfo();
         if (redisInfo.empty()) {
-            return masterMap;
+            return masterList;
         }
 
         map<string, string> mapInfo = this->parseRedisInfo(redisInfo);
@@ -62,45 +62,49 @@ namespace scoketRedisSentinel {
             masterNums = RedisSentinelUtils::stringToU32(mapInfo["sentinel_masters"]);
         }
 
-        for(uint32_t index=0; index<masterNums; index++) {
+        for (uint32_t index=0; index<masterNums; index++) {
             string key = "master" + RedisSentinelUtils::toString(index);
 
-            // master0:name=meipaiCache_001,status=ok,address=10.26.11.239:4038,slaves=1,sentinels=3
-            if( mapInfo.find(key) == mapInfo.end() ) {
+            // master0:name=testCache_001,status=ok,address=10.26.11.239:4038,slaves=1,sentinels=3
+            if (mapInfo.find(key) == mapInfo.end()) {
                 LOG(Error, "cannot find index", key, masterNums);
-                masterMap.clear();
-                return masterMap;
+                masterList.clear();
+                return masterList;
             }
 
             // IP:PORT
             vector<string> vect = RedisSentinelUtils::splitStr(mapInfo[key], ",");
-            string masterName;
-            string masterIpPort;
+            RedisInfo redisInfo;
             __foreach(it, vect) {
                 vector<string> vect2 = RedisSentinelUtils::splitStr(*it, "=");
-                if(2 == vect2.size() ) {
-                    if("name" == vect2[0]) {
-                        masterName = vect2[1];
+                if (2 == vect2.size()) {
+                    if ("name" == vect2[0]) {
+                        redisInfo.name = vect2[1];
                     }
-                    if("address" == vect2[0]) {
-                        masterIpPort = vect2[1];
+                    if ("address" == vect2[0]) {
+                        const string &address = vect2[1];
+                        vector<string> vect3 = RedisSentinelUtils::splitStr(address, ":");
+                        if (2 == vect3.size()) {
+                            redisInfo.ip = vect3[0];
+                            redisInfo.port = vect3[1];
+                        }
                     }
                 }
             }
 
-            if(!masterName.empty() && !masterIpPort.empty()) { // master name
-                masterMap[masterName] = masterIpPort;
+            if (redisInfo.bMeet()) {
+                masterList.push_back(redisInfo);
             }
         }
 
         // 再次校验数量是否一致
-        if(masterNums != masterMap.size()) {
-            LOG(Error, "not equal", masterNums, masterMap.size());
-            masterMap.clear();
+        if (masterNums != masterList.size()) {
+            LOG(Error, "not equal", masterNums, masterList.size());
+            masterList.clear();
         }
 
-        LOG(Info, mapInfo.size(), RedisSentinelUtils::printMap(masterMap));
-        return masterMap;
+        LOG(Info, mapInfo.size(), this->printListRedisInfo(masterList));
+        return masterList;
     }
 
 
@@ -124,15 +128,13 @@ namespace scoketRedisSentinel {
     }
 
     // 获取所有的从库
-    map<string, string> MySentinel::getSlave() {
-        map<string,string> slaveMap;
+    list<RedisInfo> MySentinel::getSlave() {
+        list<RedisInfo> slaveList;
 
-        // 所有主库
-        map<string, string> masterMap = this->getMaster();
-        __foreach(it, masterMap) {
-            const string masterName = it->first;
+        list<RedisInfo> masterList = this->getMaster();
+        __foreach(it, masterList) {
+            const string &masterName = it->name;
 
-            // 根据主播获得从库
             string slavesInfo = this->getSlaveByMasterName(masterName);
             list<map<string, string> > listInfo = this->parseSlaveInfo(slavesInfo);
             __foreach(it2, listInfo) {
@@ -142,16 +144,43 @@ namespace scoketRedisSentinel {
                     break;
                 }
 
+                RedisInfo redisInfo;
+
                 // ip:port
                 if (singleSlave.find("name")!= singleSlave.end()) {
-                    slaveMap[masterName] = singleSlave.at("name");
+                    const string &address = singleSlave.at("name");
+                    vector<string> vect1 = RedisSentinelUtils::splitStr(address, ":");
+                    LOG(Debug, masterName, RedisSentinelUtils::printList(vect1));
+                    if (2 == vect1.size()) {
+                        redisInfo.name = masterName;
+                        redisInfo.ip = vect1[0];
+                        redisInfo.port = vect1[1];
+                    }
+                }
+
+                string ip;
+                if (singleSlave.find("ip") != singleSlave.end()) {
+                    ip = singleSlave.at("ip");
+                }
+
+                string port;
+                if (singleSlave.find("port") != singleSlave.end()) {
+                    port = singleSlave.at("port");
+                }
+
+                // check ip and port again
+                if (!redisInfo.bMeet() || redisInfo.ip != ip || redisInfo.port != port) {
+                    slaveList.clear();
+                    LOG(Error, "illegal slave", redisInfo.dump(), ip, port);
                     break;
                 }
+
+                slaveList.push_back(redisInfo);
             }
         }
 
-        LOG(Info, masterMap.size(), RedisSentinelUtils::printMap(slaveMap));
-        return slaveMap;
+        LOG(Info, masterList.size(), this->printListRedisInfo(slaveList));
+        return slaveList;
     }
 
 
@@ -159,7 +188,7 @@ namespace scoketRedisSentinel {
 
     void MySentinel::close() {
         LOG(Debug, m_socket.getClientFd());
-        if( m_socket.getClientFd() ) {
+        if (m_socket.getClientFd()) {
             m_socket.close();
         }
     }
@@ -277,6 +306,7 @@ namespace scoketRedisSentinel {
             slaveList.clear();
         }
 
+        LOG(Debug, slaveNums, slaveList.size(), RedisSentinelUtils::printListOfMap(slaveList));
         return slaveList;
     }
 
@@ -300,7 +330,7 @@ namespace scoketRedisSentinel {
 
                 // 过滤以 $ 或者 # 开头的内容
                 if(key.str()[0] == '$' || key.str()[0] == '#') {
-                    LOG(Debug, "filter", key);
+                    LOG(Debug, "filter", key.str());
                     key.str("");
                     key.clear();
                     continue;
@@ -322,6 +352,23 @@ namespace scoketRedisSentinel {
         }
 
         return map;
+    }
+
+
+    string MySentinel::printListRedisInfo(const list<RedisInfo> &redisInfos) {
+        stringstream ss;
+        ss << "[size:" << redisInfos.size();
+        __foreach(it, redisInfos) {
+            if (it != redisInfos.begin()) {
+                ss << " | ";
+            } else {
+                ss << " ";
+            }
+            ss << it->dump();
+        }
+        ss << "]";
+
+        return ss.str();
     }
 
 

@@ -43,7 +43,7 @@ int main(int argc, char const* argv[])
         return 1;
     }
 
-    map<string, string> mapInfo = cmd.getSlave();
+    list<RedisInfo> mapInfo = cmd.getSlave();
 
 
     return 0;

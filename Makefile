@@ -154,7 +154,7 @@ define gen_libs
 	@echo -e $(YELLOW)"========================Success========================"$(BLACK)
 endef
 
-# Call gen_single_excbin to generate a excutale file.
+# Call gen_single_excbin to generate an excutale file.
 $(foreach bin,$(SINGLE_BIN),$(eval $(call gen_single_excbin,$(bin),$(CUR_OBJ),$(CXX))))
 
 # Call gen_mutil_bin to generate mutil excutale files.

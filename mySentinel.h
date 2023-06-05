@@ -12,6 +12,32 @@ using namespace std;
 
 namespace scoketRedisSentinel {
 
+    struct RedisInfo {
+        // eg. testCache_001
+        string name;
+        string ip;
+        string port;
+
+        bool bMeet() {
+            if (!name.empty() && !ip.empty() && !port.empty()) {
+                return true;
+            }
+
+            return false;
+        }
+
+
+        const string dump() const {
+            stringstream ss;
+            ss << "RedisInfo - {"
+                << "[name:" << name << "]"
+                << "[ip:" << ip << "]"
+                << "[port:" << port << "]"
+                << "}";
+            return ss.str();
+        }
+    };
+
 
 
     class MySentinel
@@ -29,7 +55,7 @@ namespace scoketRedisSentinel {
 
 
         // 解析所有的master ip:port
-        map<string,string> getMaster();
+        list<RedisInfo> getMaster();
 
 
 
@@ -37,7 +63,7 @@ namespace scoketRedisSentinel {
         string getSlaveByMasterName(const string &masterName);
 
         // 获取所有的从库
-        map<string, string> getSlave();
+        list<RedisInfo> getSlave();
 
 
 
@@ -66,6 +92,8 @@ namespace scoketRedisSentinel {
 
         // 解析 info 命令返回的数据
         map<string, string> parseRedisInfo(const string &redisInfo);
+
+        string printListRedisInfo(const list<RedisInfo> &redisInfos);
 
 
     private:
