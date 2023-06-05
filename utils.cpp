@@ -115,7 +115,7 @@ namespace myRedisSentinel {
         hints.ai_socktype = SOCK_STREAM;
 
         if ((status = getaddrinfo(domain.c_str(), NULL, &hints, &res)) != 0) {
-            std::cout << "[" << __FILE__ << ":" << __LINE__ << "]" << ", getaddrinfo: " << gai_strerror(status) << std::endl;
+            LOG(Debug, status, gai_strerror(status));
             return ipList;
         }
 
@@ -134,8 +134,8 @@ namespace myRedisSentinel {
             }
 
             inet_ntop(p->ai_family, addr, ipstr, sizeof ipstr);
-            //std::cout << "[" << __FILE__ << ":" << __LINE__ << "]" << ", Resolved " << domain << " to " << ipver << " address: " << ipstr << std::endl;
             ipList.push_back(ipstr);
+            LOG(Debug, domain, ipver, ipstr, ipList.size());
         }
 
         freeaddrinfo(res);

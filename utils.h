@@ -1,5 +1,5 @@
-#ifndef __MY_REDIS_SENTINEL_UTILS_H__
-#define __MY_REDIS_SENTINEL_UTILS_H__
+#ifndef __SCOKET_REDIS_SENTINEL_UTILS_H__
+#define __SCOKET_REDIS_SENTINEL_UTILS_H__
 
 
 #include <arpa/inet.h>
@@ -157,7 +157,7 @@ namespace myRedisSentinel {
 		FORMAT_ITEMS(_ss, ##__VA_ARGS__);					\
 	} while (0)
 
-    #define PRINTLOG(l, ...) 								\
+    #define LOG(l, ...) 								\
 	do {													\
 		__FORMAT_DEBUG_STRING(__VA_ARGS__);					\
         int lv = l;                                         \

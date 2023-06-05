@@ -19,11 +19,11 @@ namespace myRedisSentinel {
 
     bool MySentinel::init(const string &ip, uint16_t port) {
         if(!m_socket.connect(ip, port)) {
-            std::cout << "[" << __FILE__ << ":" << __LINE__ << "]" << ", connect sentinel failed ip=[" << ip << "] port=[" << port << "]" << std::endl;
+            LOG(Error, "connect sentinel failed", ip, port);
             return false;
         }
 
-        PRINTLOG(Info, "connect sentinel ok", ip, port);
+        LOG(Debug, "connect sentinel ok", ip, port);
         return true;
     }
 
@@ -31,14 +31,14 @@ namespace myRedisSentinel {
     string MySentinel::getRedisInfo() {
         string message = "info";
         if(!m_socket.send(message)) {
-            std::cout << "[" << __FILE__ << ":" << __LINE__ << "]" << ", send mgs failed message=[" << message << "]" << std::endl;
+            LOG(Error, "send mgs failed", message);
             return "";
         }
 
         // receive message
         string redisInfo;
         if(!m_socket.recv(redisInfo)) {
-            std::cout << "[" << __FILE__ << ":" << __LINE__ << "]" << ", recv mgs failed redisInfo=[" << redisInfo << "]" << std::endl;
+            LOG(Error, "recv mgs failed", redisInfo);
             return "";
         }
 
@@ -67,7 +67,7 @@ namespace myRedisSentinel {
 
             // master0:name=meipaiCache_001,status=ok,address=10.26.11.239:4038,slaves=1,sentinels=3
             if( mapInfo.find(key) == mapInfo.end() ) {
-                std::cout << "[" << __FILE__ << ":" << __LINE__ << "]" << ", masterNums=[" << masterNums << "] but cannot find index key=[" << key << "]" << std::endl;
+                LOG(Error, "cannot find index", key, masterNums);
                 masterMap.clear();
                 return masterMap;
             }
@@ -95,11 +95,11 @@ namespace myRedisSentinel {
 
         // 再次校验数量是否一致
         if(masterNums != masterMap.size()) {
-            std::cout << "[" << __FILE__ << ":" << __LINE__ << "]" << ", masterNums=[" << masterNums << "] but masterMap.size=[" << masterMap.size() << "]" << std::endl;
+            LOG(Error, "not equal", masterNums, masterMap.size());
             masterMap.clear();
         }
 
-        PRINTLOG(Info, mapInfo.size(), RedisSentinelUtils::printMap(masterMap));
+        LOG(Info, mapInfo.size(), RedisSentinelUtils::printMap(masterMap));
         return masterMap;
     }
 
@@ -108,15 +108,15 @@ namespace myRedisSentinel {
     // 根据masterName获取所有的从库
     string MySentinel::getSlaveByMasterName(const string &masterName) {
         const string message = string("sentinel slaves " ) + masterName;
-        if( !m_socket.send(message)) {
-            std::cout << "[" << __FILE__ << ":" << __LINE__ << "]" << ", send mgs failed message=[" << message << "]" << std::endl;
+        if (!m_socket.send(message)) {
+            LOG(Error, "send mgs failed", message);
             return "";
         }
 
         // receive message
         string slavesInfo;
         if (!m_socket.recv(slavesInfo)) {
-            std::cout << "[" << __FILE__ << ":" << __LINE__ << "]" << ", recv mgs failed slavesInfo=[" << slavesInfo << "]" << std::endl;
+            LOG(Error, "recv mgs failed", slavesInfo);
             return "";
         }
 
@@ -138,7 +138,7 @@ namespace myRedisSentinel {
             __foreach(it2, listInfo) {
                 const map<string, string> &singleSlave = *it2;
                 if (singleSlave.find("flags") == singleSlave.end() || singleSlave.at("flags") != "slave") {
-                    std::cout << "[" << __FILE__ << ":" << __LINE__ << "]" << ", illgeal slave=[" << RedisSentinelUtils::printMap(singleSlave) << "]" << std::endl;
+                    LOG(Error, "illgeal slave", RedisSentinelUtils::printMap(singleSlave));
                     break;
                 }
 
@@ -150,7 +150,7 @@ namespace myRedisSentinel {
             }
         }
 
-        PRINTLOG(Info, masterMap.size(), RedisSentinelUtils::printMap(slaveMap));
+        LOG(Info, masterMap.size(), RedisSentinelUtils::printMap(slaveMap));
         return slaveMap;
     }
 
@@ -158,7 +158,7 @@ namespace myRedisSentinel {
 
 
     void MySentinel::close() {
-        std::cout << "[" << __FILE__ << ":" << __LINE__ << "]" << ", cloese m_client_fd=[" << m_socket.getClientFd() << "]" << std::endl;
+        LOG(Debug, m_socket.getClientFd());
         if( m_socket.getClientFd() ) {
             m_socket.close();
         }
@@ -226,7 +226,7 @@ namespace myRedisSentinel {
                 } else if (4 == flag) {     // 解析完value的长度，开始解析value的值
                     flag = 5;
                 } else {
-                    std::cout << "[" << __FILE__ << ":" << __LINE__ << "]" << ", unkown flag=[" << flag << "]" << std::endl;
+                    LOG(Error, "unkown flag", flag);
                 }
                 continue;
             }
@@ -237,7 +237,7 @@ namespace myRedisSentinel {
                     slaveNums = RedisSentinelUtils::stringToU32(data.str());
                 } else if (1 == flag) {    // 解析新的一组slave中key数量*value数量
                     if (!singleSlave.empty()) {
-                        std::cout << "[" << __FILE__ << ":" << __LINE__ << "]" << ", singleSlave=[" << RedisSentinelUtils::printMap(singleSlave) << "]" << std::endl;
+                        LOG(Debug, "new slave start", flag);
                         slaveList.push_back(singleSlave);
                         singleSlave.clear();
                     }
@@ -254,7 +254,7 @@ namespace myRedisSentinel {
                     value.clear();
                 } else {
                     slaveList.clear();
-                    std::cout << "[" << __FILE__ << ":" << __LINE__ << "]" << ", illegal flag=[" << flag << "]" << std::endl;
+                    LOG(Error, "illegal flag", flag);
                     return slaveList;
                 }
 
@@ -273,10 +273,8 @@ namespace myRedisSentinel {
 
         // 校验数量是否一致
         if (slaveNums != slaveList.size()) {
-            std::cout << "[" << __FILE__ << ":" << __LINE__ << "]" << ", slaveNums=[" <<slaveNums << "] not equal slaveList.size=[" << slaveList.size() << "]" << std::endl;
+            LOG(Error, "not equal", slaveNums, slaveList.size());
             slaveList.clear();
-        } else {
-            //std::cout << "[" << __FILE__ << ":" << __LINE__ << "]" << ", slaveNums=[" <<slaveNums << "] slaveList.size=[" << slaveList.size() << "]" << std::endl;
         }
 
         return slaveList;
@@ -302,7 +300,7 @@ namespace myRedisSentinel {
 
                 // 过滤以 $ 或者 # 开头的内容
                 if(key.str()[0] == '$' || key.str()[0] == '#') {
-                    //std::cout << "[" << __FILE__ << ":" << __LINE__ << "]" << ", key=[" << key.str() << "] filter" << std::endl;
+                    LOG(Debug, "filter", key);
                     key.str("");
                     key.clear();
                     continue;

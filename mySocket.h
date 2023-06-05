@@ -1,10 +1,11 @@
-#ifndef __MY_REDIS_SENTINEL_SOCKET_H__
-#define __MY_REDIS_SENTINEL_SOCKET_H__
+#ifndef __SCOKET_REDIS_SENTINEL_SOCKET_H__
+#define __SCOKET_REDIS_SENTINEL_SOCKET_H__
 
 
 
 
 #include "common.h"
+#include "utils.h"
 
 
 using namespace std;

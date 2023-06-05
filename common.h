@@ -1,5 +1,5 @@
-#ifndef     __MY_REDIS_SENTINEL_COMMON_H__
-#define     __MY_REDIS_SENTINEL_COMMON_H__
+#ifndef __SCOKET_REDIS_SENTINEL_COMMON_H__
+#define __SCOKET_REDIS_SENTINEL_COMMON_H__
 
 
 #include <sys/socket.h>

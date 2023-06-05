@@ -15,7 +15,7 @@ namespace myRedisSentinel {
     bool MySocket::connect(const string &ip, const uint16_t &port) {
         struct sockaddr_in serv_addr;
         if ((m_client_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-            std::cout << "[" << __FILE__ << ":" << __LINE__ << "]" << " " <<"Socket creation error" << std::endl;
+            LOG(Error, "creation error", ip, port);
             return false;
         }
 
@@ -23,9 +23,8 @@ namespace myRedisSentinel {
         serv_addr.sin_port = htons(port);
 
         // Convert IPv4 and IPv6 addresses from text to binary
-        if (inet_pton(AF_INET, ip.c_str(), &serv_addr.sin_addr)
-            <= 0) {
-            std::cout << "[" << __FILE__ << ":" << __LINE__ << "]" << " " <<"Invalid address/ Address not supported" << std::endl;
+        if (inet_pton(AF_INET, ip.c_str(), &serv_addr.sin_addr) <= 0) {
+            LOG(Error, "invalid address/ address not supported");
             return false;
         }
 
@@ -33,8 +32,7 @@ namespace myRedisSentinel {
 
         int ret = ::connect(m_client_fd, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
         if (ret < 0) {
-            std::cout << "[" << __FILE__ << ":" << __LINE__ << "]" << " " << "Connection Failed ret=[" << ret \
-                    << "] ip=[" << ip << "] port=[" << port << "]" << std::endl;
+            LOG(Error,  "connection failed", ret, ip, port);
             return false;
         }
 
@@ -48,23 +46,23 @@ namespace myRedisSentinel {
 
         int ret = -1;
         if ((ret = ::setsockopt (m_client_fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout))) < 0) {
-            std::cout << "[" << __FILE__ << ":" << __LINE__ << "]" << " " << "set rcv timeout Failed ret=[" << ret << "]" << std::endl;
+            LOG(Warn, "set rcv timeout Failed", ret);
         }
 
         timeout.tv_sec = sendSec;
         if ((ret = ::setsockopt (m_client_fd, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout)) < 0)) {
-            std::cout << "[" << __FILE__ << ":" << __LINE__ << "]" << " " << "set send timeout Failed ret=[" << ret << "]" << std::endl;
+            LOG(Warn, "set send timeout Failed", ret);
         }
     }
 
     bool MySocket::send(const string &message) {
         string data = message + "\n";
         if (::send(m_client_fd, data.c_str(), data.size(), 0) < 0) {
-            std::cout << "[" << __FILE__ << ":" << __LINE__ << "]" << " Failed to send message" << std::endl;
+            LOG(Error, "failed to send message", message);
             return false;
         }
 
-        //std::cout << "[" << __FILE__ << ":" << __LINE__ << "]" << " send ok message=[" << message << "]" << std::endl;
+        LOG(Debug, "================> send ok", message);
         return true;
     }
 
@@ -85,10 +83,10 @@ namespace myRedisSentinel {
         while (true) {
             int ret = select(m_client_fd + 1, &readFds, NULL, NULL, &tv);
             if (-1 == ret) {
-                std::cout << "[" << __FILE__ << ":" << __LINE__ << "]" << " select error" << std::endl;
+                LOG(Error, "select error");
                 break;
             } else if (0 == ret) {
-                // std::cout << "[" << __FILE__ << ":" << __LINE__ << "]" << " select timeout" << std::endl;
+                LOG(Debug, "select timeout");
                 break;
             } else {
                 if (FD_ISSET(m_client_fd, &readFds)) {
@@ -96,14 +94,14 @@ namespace myRedisSentinel {
                     memset(bufferTmp, 0, sizeof(bufferTmp));
                     int len = ::recv(m_client_fd, bufferTmp, sizeof(bufferTmp), 0);
                     if(len > 0) {
-                        //std::cout << "[" << __FILE__ << ":" << __LINE__ << "]" << " len=[" << len << "] recv ok bufferTmp=[" << bufferTmp << "]" << std::endl;
+                        LOG(Debug, len, bufferTmp);
                         bufferTmp[len] = '\0';
                         memcpy(buffer + strlen(buffer), bufferTmp, strlen(bufferTmp));
                     } else if (len < 0) {
-                        std::cout << "[" << __FILE__ << ":" << __LINE__ << "]" << " len=[" << len << "] connection closed" << std::endl;
+                        LOG(Debug, "connection closed", len);
                         return false;
                     } else {
-                        std::cout << "[" << __FILE__ << ":" << __LINE__ << "]" << " len=[" << len << "] no more data to read" << std::endl;
+                        LOG(Debug, "no more data to read", len);
                         break;
                     }
                 }
@@ -118,10 +116,10 @@ namespace myRedisSentinel {
         while (true) {
             int ret = poll(fds, 1, timeOutMils);
             if (-1 == ret) {
-                std::cout << "[" << __FILE__ << ":" << __LINE__ << "]" << " poll error" << std::endl;
+                LOG(Error, "poll error");
                 break;
             } else if (ret == 0) {
-                // std::cout << "[" << __FILE__ << ":" << __LINE__ << "]" << " poll timeout" << std::endl;
+                LOG(Debug, "poll timeout");
                 break;
             } else {
                 if (fds[0].revents & POLLIN) {
@@ -129,14 +127,14 @@ namespace myRedisSentinel {
                     memset(bufferTmp, 0, sizeof(bufferTmp));
                     int len = ::recv(m_client_fd, bufferTmp, sizeof(bufferTmp), 0);
                     if (len > 0) {
-                        //std::cout << "[" << __FILE__ << ":" << __LINE__ << "]" << " len=[" << len << "] recv ok bufferTmp=[" << bufferTmp << "]" << std::endl;
                         bufferTmp[len] = '\0';
+                        LOG(Debug, len, bufferTmp);
                         memcpy(buffer + strlen(buffer), bufferTmp, strlen(bufferTmp));
                     } else if (len < 0) {
-                        std::cout << "[" << __FILE__ << ":" << __LINE__ << "]" << " len=[" << len << "] connection closed" << std::endl;
+                        LOG(Debug, "connection closed", len);
                         return false;
                     } else {
-                        std::cout << "[" << __FILE__ << ":" << __LINE__ << "]" << " len=[" << len << "] no more data to read" << std::endl;
+                        LOG(Debug, "no more data to read", len);
                         break;
                     }
                 }
@@ -146,7 +144,7 @@ namespace myRedisSentinel {
 
         message = buffer;
 
-        //std::cout << "[" << __FILE__ << ":" << __LINE__ << "]" << " ====> total message=[" << message << "]" << std::endl;
+        LOG(Debug, "================> recv end", message);
         return true;
     }
 

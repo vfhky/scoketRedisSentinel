@@ -10,7 +10,7 @@ using namespace myRedisSentinel;
 int main(int argc, char const* argv[])
 {
     if(argc < 4) {
-        PRINTLOG(Error, argc, "usage:getRedisFromSentinel type/1-domain/2-ip "\
+        LOG(Error, argc, "usage:getRedisFromSentinel type/1-domain/2-ip "\
                 "sentinelIP sentinelPort [logLv]");
         return 0;
     }
@@ -39,7 +39,7 @@ int main(int argc, char const* argv[])
 
     MySentinel cmd;
     if(!cmd.init(ip, port)) {
-        PRINTLOG(Error, "init failed", ip, port);
+        LOG(Error, "init failed", ip, port);
         return 1;
     }
 
