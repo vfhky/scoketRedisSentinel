@@ -3,7 +3,7 @@
 
 
 
-namespace myRedisSentinel {
+namespace scoketRedisSentinel {
 
 
 

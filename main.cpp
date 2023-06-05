@@ -3,7 +3,7 @@
 
 
 
-using namespace myRedisSentinel;
+using namespace scoketRedisSentinel;
 
 
 

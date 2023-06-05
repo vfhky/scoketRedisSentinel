@@ -10,7 +10,7 @@
 
 using namespace std;
 
-namespace myRedisSentinel {
+namespace scoketRedisSentinel {
 
 
 

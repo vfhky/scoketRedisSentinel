@@ -25,7 +25,7 @@
 
 using namespace std;
 
-namespace myRedisSentinel {
+namespace scoketRedisSentinel {
 
 
 
@@ -33,7 +33,7 @@ namespace myRedisSentinel {
     extern int syslogLevel;
 
 
-    // ¼ÆËã__VA_ARGS__²ÎÊı¸öÊı¸¨Öúºê
+    // è®¡ç®—__VA_ARGS__å‚æ•°ä¸ªæ•°è¾…åŠ©å®
     #define __ARG_N(											\
         _1, _2, _3, _4, _5, _6, _7, _8, _9,_10,					\
         _11,_12,_13,_14,_15,_16,_17,_18,_19,_20,				\
@@ -60,7 +60,7 @@ namespace myRedisSentinel {
     #define __NARG__(...) __NARG_I(__VA_ARGS__, __RSEQ_N())
 
 
-    //¸ñÊ½»¯__VA_ARGS__¸¨Öúºê
+    //æ ¼å¼åŒ–__VA_ARGS__è¾…åŠ©å®
     #define __VFUNC__(name, n) name##n
 
     #define __VFUNC(name, n) __VFUNC__(name, n)
