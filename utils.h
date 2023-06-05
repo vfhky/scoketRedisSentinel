@@ -295,6 +295,9 @@ namespace scoketRedisSentinel {
         static void printLog(int lv, const char *file, const char *function, int line, const char *fmt, ...);
 
 
+        static bool simpleCheckIpStr(const string &ip);
+
+
 
 
     };

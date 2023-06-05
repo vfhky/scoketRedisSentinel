@@ -96,6 +96,10 @@ namespace scoketRedisSentinel {
         string printListRedisInfo(const list<RedisInfo> &redisInfos);
 
 
+        uint32_t getHashIndex(const string& key, const int32_t &redisNums);
+
+
+
     private:
         MySocket m_socket;
 

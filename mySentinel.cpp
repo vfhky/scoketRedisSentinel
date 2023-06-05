@@ -372,5 +372,27 @@ namespace scoketRedisSentinel {
     }
 
 
+    uint32_t MySentinel::getHashIndex(const string& key, const int32_t &redisNums) {
+        if (0 >= redisNums) {
+            LOG(Error, "illegal param", key, redisNums);
+            return 0;
+        }
+
+        const char *keyPtr = key.c_str();
+        long hashIndex = 1L;
+        for (uint32_t index=0; index < key.length(); ++index) {
+            hashIndex = ((hashIndex << 5) + hashIndex) + keyPtr[index];
+            hashIndex = hashIndex & 0xFFFFFFFFl;
+        }
+
+        hashIndex = (int)hashIndex % redisNums;
+        if (hashIndex < 0) {
+            hashIndex = hashIndex * -1;
+        }
+
+        return hashIndex;
+    }
+
+
 }
 

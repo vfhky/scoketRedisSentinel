@@ -188,6 +188,23 @@ namespace scoketRedisSentinel {
         }
     }
 
+    bool RedisSentinelUtils::simpleCheckIpStr(const string &ip) {
+        if (ip.empty()) {
+            return false;
+        }
+
+        for (uint32_t index = 0; index < ip.length(); index++) {
+            char c = ip[index];
+            if ((0x30 <= c && c <= 0x39) || '.' == c) {
+                continue;
+            } else {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
 
 
 }
