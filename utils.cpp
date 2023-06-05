@@ -7,6 +7,12 @@ namespace myRedisSentinel {
 
 
 
+
+    int syslogLevel;
+
+
+
+
     uint32_t RedisSentinelUtils::atou32(const char *nptr)
     {
         return strtoul(nptr,0,10);
@@ -134,6 +140,52 @@ namespace myRedisSentinel {
 
         freeaddrinfo(res);
         return ipList;
+    }
+
+    string RedisSentinelUtils::getCurrentDateString() {
+        time_t now;
+        time(&now);
+        struct tm tm_current = {0};
+        localtime_r(&now, &tm_current);
+
+        char dateStr[28] = {0};
+        snprintf(dateStr, sizeof(dateStr), "%04d-%02d-%02d %02d:%02d:%02d", tm_current.tm_year + 1900, tm_current.tm_mon + 1, tm_current.tm_mday, tm_current.tm_hour, tm_current.tm_min, tm_current.tm_sec);
+        string rtnString;
+        rtnString = dateStr;
+        return rtnString;
+    }
+
+
+
+    void RedisSentinelUtils::printLog(int lv, const char *file, const char *function, int line, const char *fmt, ...) {
+        static const int MAXLOGLINE = 4096;
+
+        if (syslogLevel && (lv<=syslogLevel)) {
+            char msg[MAXLOGLINE];
+
+            va_list		ap;
+            va_start(ap,fmt);
+            int ret = vsnprintf( msg, MAXLOGLINE, fmt, ap );
+            va_end(ap);
+
+            if (ret < 0)
+                return;
+
+            struct timeval tv;
+            ::gettimeofday(&tv,NULL);
+
+            // 2023-06-05 11:11:11
+            char buf[64] = {0x00};
+            struct tm *t = ::localtime(&tv.tv_sec);
+            strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", t);
+
+            std::cout << "[" << buf << ":" << tv.tv_usec << "us][" << file << ":" << function << ":" \
+                    << line << "][" << getpid() << "] ";
+            if (lv <= Error) {
+                std::cout << " ***err*** ";
+            }
+            std::cout << msg << std::endl;
+        }
     }
 
 

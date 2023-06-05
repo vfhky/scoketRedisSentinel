@@ -15,6 +15,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <poll.h>
+#include <stdarg.h>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -24,16 +25,9 @@
 
 
 
-#ifndef  _MSC_VER
 
-#define __STDC_FORMAT_MACROS
-#include <stdint.h>
-#include <inttypes.h>
-#include <sys/types.h>
 
-#else	//	_MSC_VER
 
-#include <sys/types.h>
 
 #ifdef	    __GNUC__
 /* FreeBSD has these C99 int types defined in /sys/inttypes.h already */
@@ -56,9 +50,8 @@ typedef unsigned char uint8_t;
 typedef unsigned short uint16_t;
 typedef unsigned int uint32_t;
 typedef unsigned __int64 uint64_t;
-#endif /* _MSC_VER */
+#endif
 
-#endif	//	!_MSC_VER
 
 
 #define URI_TYPE int
@@ -72,9 +65,14 @@ typedef unsigned char bool;
 
 
 
-#endif /* !_INT_TYPES_H_ */
-
-
+enum LogLevel{
+	Fatal = 0,	//0
+	Error = 3,	//3
+	Warn = 4,	//4
+	Notice = 5,//5
+	Info = 6,	//6
+	Debug = 7,	//7
+};
 
 
 
@@ -86,4 +84,8 @@ typedef unsigned char bool;
 
 
 
+
+
+
+#endif
 

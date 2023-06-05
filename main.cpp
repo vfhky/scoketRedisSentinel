@@ -6,10 +6,12 @@
 using namespace myRedisSentinel;
 
 
+
 int main(int argc, char const* argv[])
 {
-    if(argc != 4) {
-        std::cout << "[" << __FILE__ << ":" << __LINE__ << "]" << " " <<"argc=[" << argc << "] getRedisFromSentinel type/1-domain/2-ip sentinelIP sentinelPort" << std::endl;
+    if(argc < 4) {
+        PRINTLOG(Error, argc, "usage:getRedisFromSentinel type/1-domain/2-ip "\
+                "sentinelIP sentinelPort [logLv]");
         return 0;
     }
 
@@ -29,11 +31,15 @@ int main(int argc, char const* argv[])
     }
     uint16_t port = atoi(argv[3]);
 
-
+    // 日志级别
+    syslogLevel = Error;
+    if (5 == argc) {
+        syslogLevel = atoi(argv[4]);
+    }
 
     MySentinel cmd;
     if(!cmd.init(ip, port)) {
-        std::cout << "[" << __FILE__ << ":" << __LINE__ << "]" << ", init failed ip=[" << ip << "] port=[" << port << "]" << std::endl;
+        PRINTLOG(Error, "init failed", ip, port);
         return 1;
     }
 

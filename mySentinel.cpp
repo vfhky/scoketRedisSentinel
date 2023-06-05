@@ -23,7 +23,7 @@ namespace myRedisSentinel {
             return false;
         }
 
-        std::cout << "[" << __FILE__ << ":" << __LINE__ << "]" << ", connect sentinel ok ip=[" << ip << "] port=[" << port << "]" << std::endl;
+        PRINTLOG(Info, "connect sentinel ok", ip, port);
         return true;
     }
 
@@ -99,7 +99,7 @@ namespace myRedisSentinel {
             masterMap.clear();
         }
 
-        std::cout << "[" << __FILE__ << ":" << __LINE__ << "]" << ", mapInfo.size=[" << mapInfo.size() << "] masterMap=[" << RedisSentinelUtils::printMap(masterMap) << "]" << std::endl;
+        PRINTLOG(Info, mapInfo.size(), RedisSentinelUtils::printMap(masterMap));
         return masterMap;
     }
 
@@ -150,7 +150,7 @@ namespace myRedisSentinel {
             }
         }
 
-        std::cout << "[" << __FILE__ << ":" << __LINE__ << "]" << ", masterMap.size=[" << masterMap.size() << "] slaveMap=[" << RedisSentinelUtils::printMap(slaveMap) << "]" << std::endl;
+        PRINTLOG(Info, masterMap.size(), RedisSentinelUtils::printMap(slaveMap));
         return slaveMap;
     }
 
