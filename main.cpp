@@ -41,6 +41,9 @@ int main(int argc, char const* argv[])
     }
 
     list<RedisInfo> mapInfo = cmd.getSlave();
+    __foreach(it, mapInfo) {
+
+    }
 
 
     return 0;
