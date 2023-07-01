@@ -1,2 +1,2 @@
-# scoketRedisSentinel
+# socketRedisSentinel
 tcp原生通信从redis的sentinel域名解析数据

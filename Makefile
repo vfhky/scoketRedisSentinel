@@ -18,7 +18,7 @@ GEN_LIBS    	:=
 # Flag of generate a dynamic lib: y means yes. It should be blank unless you want to generate a dynamic lib!
 GEN_DYN_LIB		:=
 # generate a single target bin file.Please let it be blank unless the target is a excutable file.
-SINGLE_BIN		:= scoketRedisSentinel
+SINGLE_BIN		:= socketRedisSentinel
 # generate mutil target bin files.Please let it be blank unless the target is a excutable file.
 MUTIL_BIN		:=
 # Name of the static lib. It should be blank unless the target is a static lib, then the GEN_LIBS is y and GEN_DYN_LIB is blank.

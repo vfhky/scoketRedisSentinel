@@ -41,9 +41,6 @@ int main(int argc, char const* argv[])
     }
 
     list<RedisInfo> mapInfo = cmd.getSlave();
-    __foreach(it, mapInfo) {
-        LOG(Info, "get slave info from sentinel", it.dump(), it.2dump());
-    }
 
 
     return 0;
