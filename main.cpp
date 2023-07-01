@@ -10,8 +10,8 @@ using namespace scoketRedisSentinel;
 int main(int argc, char const* argv[])
 {
     if(argc < 3) {
-        LOG(Error, argc, "usage:getRedisFromSentinel "\
-                "sentinelIP sentinelPort [logLv]");
+        syslogLevel = Error;
+        LOG(Error, argc, "usage:getRedisFromSentinel sentinelIP sentinelPort [logLv]");
         return 0;
     }
 
