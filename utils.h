@@ -13,6 +13,7 @@
 #include <netdb.h>
 #include <stdarg.h>
 #include <sys/time.h>
+#include <zlib.h>
 #include <vector>
 #include <list>
 #include <map>

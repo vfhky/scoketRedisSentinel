@@ -9,9 +9,9 @@ using namespace scoketRedisSentinel;
 
 int main(int argc, char const* argv[])
 {
+    syslogLevel = Error;
     if(argc < 3) {
-        syslogLevel = Error;
-        LOG(Error, argc, "usage:getRedisFromSentinel sentinelIP sentinelPort [logLv]");
+        LOG(Error, argc, "usage: socketRedisSentinel sentinelIP/domain sentinelPort [logLv] [type:1-slave 2-master] [hash]");
         return 0;
     }
 
@@ -29,9 +29,14 @@ int main(int argc, char const* argv[])
     uint16_t port = atoi(argv[2]);
 
     // 日志级别
-    syslogLevel = Error;
-    if (4 == argc) {
+    if (argc > 3) {
         syslogLevel = atoi(argv[3]);
+    }
+
+    // hash : hash_001|hash_002|...
+    string hash = "";
+    if (argc > 4) {
+        hash = argv[4];
     }
 
     MySentinel cmd;
@@ -40,7 +45,21 @@ int main(int argc, char const* argv[])
         return 1;
     }
 
-    list<RedisInfo> mapInfo = cmd.getSlave();
+    cmd.pharseSlave();
+
+
+    // master redis infos
+    list<RedisInfo> allMasterRedis = cmd.getRedisByHash(2, hash);
+    __foreach(it, allMasterRedis) {
+        LOG(Info, it->dump());
+    }
+
+    // slave redis infos
+    list<RedisInfo> hashSlaveRedis = cmd.getRedisByHash(1, hash);
+    __foreach(it, hashSlaveRedis) {
+        LOG(Info, it->dump());
+    }
+
 
 
     return 0;

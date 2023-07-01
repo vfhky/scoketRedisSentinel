@@ -62,14 +62,30 @@ namespace scoketRedisSentinel {
         // 根据masterName获取所有的从库
         string getSlaveByMasterName(const string &masterName);
 
-        // 获取所有的从库
-        list<RedisInfo> getSlave();
+        // 解析所有的从库到内存
+        void pharseSlave();
+
+
+        /**
+         * @param type 1-master 2-slave
+         * @param hashStr format：hash_001|hash_0002|....
+         * @return master or slave redis infos
+        */
+        list<RedisInfo> getRedisByHash(const uint32_t &type, const string &hashStr);
+
+        uint32_t getHashIndexCrc32(const string &key, const int32_t &redisNum);
 
 
 
 
         void close();
 
+
+
+        map<string/*hash*/, map<uint32_t, RedisInfo> > getSlaveRedis();
+        void setSlaveRedis(const map<string/*hash*/, map<uint32_t, RedisInfo> > &info);
+        map<string/*hash*/, map<uint32_t, RedisInfo> > getMasterRedis();
+        void setMasterRedis(const map<string/*hash*/, map<uint32_t, RedisInfo> > &info);
 
 
 
@@ -102,6 +118,9 @@ namespace scoketRedisSentinel {
 
     private:
         MySocket m_socket;
+
+        map<string/*hash*/, map<uint32_t, RedisInfo> > m_slaveRedis;
+        map<string/*hash*/, map<uint32_t, RedisInfo> > m_masterRedis;
 
 
 

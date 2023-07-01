@@ -103,6 +103,17 @@ namespace scoketRedisSentinel {
             masterList.clear();
         }
 
+        map<string/*hash*/, map<uint32_t, RedisInfo> > allMasterInfo;
+        __foreach(it, masterList) {
+            if (allMasterInfo.find(it->name) != allMasterInfo.end()) {
+                uint32_t index = allMasterInfo[it->name].size() + 1;
+                allMasterInfo[it->name][index] = *it;
+            } else {
+                allMasterInfo[it->name][1] = *it;
+            }
+        }
+        this->setMasterRedis(allMasterInfo);
+
         LOG(Info, mapInfo.size(), this->printListRedisInfo(masterList));
         return masterList;
     }
@@ -128,7 +139,7 @@ namespace scoketRedisSentinel {
     }
 
     // 获取所有的从库
-    list<RedisInfo> MySentinel::getSlave() {
+    void MySentinel::pharseSlave() {
         list<RedisInfo> slaveList;
 
         list<RedisInfo> masterList = this->getMaster();
@@ -179,8 +190,18 @@ namespace scoketRedisSentinel {
             }
         }
 
+        map<string/*hash*/, map<uint32_t, RedisInfo> > allSlaveInfo;
+        __foreach(it, slaveList) {
+            if (allSlaveInfo.find(it->name) != allSlaveInfo.end()) {
+                uint32_t index = allSlaveInfo[it->name].size() + 1;
+                allSlaveInfo[it->name][index] = *it;
+            } else {
+                allSlaveInfo[it->name][1] = *it;
+            }
+        }
+        this->setSlaveRedis(allSlaveInfo);
+
         LOG(Info, masterList.size(), this->printListRedisInfo(slaveList));
-        return slaveList;
     }
 
 
@@ -379,7 +400,7 @@ namespace scoketRedisSentinel {
         }
 
         const char *keyPtr = key.c_str();
-        long hashIndex = 1L;
+        long hashIndex = 5381;
         for (uint32_t index=0; index < key.length(); ++index) {
             hashIndex = ((hashIndex << 5) + hashIndex) + keyPtr[index];
             hashIndex = hashIndex & 0xFFFFFFFFl;
@@ -392,6 +413,58 @@ namespace scoketRedisSentinel {
 
         return hashIndex;
     }
+
+    list<RedisInfo> MySentinel::getRedisByHash(const uint32_t &type, const string &hashStr) {
+        map<string/*hash*/, map<uint32_t, RedisInfo> > allRedis = (2 == type) \
+                ? this->getMasterRedis() : this->getSlaveRedis();
+
+        list<RedisInfo> redisInfos;
+
+        if (hashStr.empty()) {
+            __foreach(it, allRedis) {
+                redisInfos.push_back(it->second.begin()->second);
+            }
+            return redisInfos;
+        }
+
+        vector<string> allSlaves = RedisSentinelUtils::splitStr(hashStr, "|");
+        __foreach(it, allSlaves) {
+            if (allRedis.find(*it) != allRedis.end()) {
+                // just use the first redis ip port
+                redisInfos.push_back(allRedis[*it].begin()->second);
+            }
+        }
+
+        return redisInfos;
+    }
+
+    uint32_t MySentinel::getHashIndexCrc32(const string &key, const int32_t &redisNum) {
+        return crc32(0L, (unsigned char *)key.c_str(), key.size()) % redisNum;
+    }
+
+
+
+
+
+    map<string/*hash*/, map<uint32_t, RedisInfo> > MySentinel::getSlaveRedis() {
+        return this->m_slaveRedis;
+    }
+
+    void MySentinel::setSlaveRedis(const map<string/*hash*/, map<uint32_t, RedisInfo> > &info) {
+        this->m_slaveRedis = info;
+    }
+
+    map<string/*hash*/, map<uint32_t, RedisInfo> > MySentinel::getMasterRedis() {
+        return this->m_masterRedis;
+    }
+
+    void MySentinel::setMasterRedis(const map<string/*hash*/, map<uint32_t, RedisInfo> > &info) {
+        this->m_masterRedis = info;
+    }
+
+
+
+
 
 
 }
