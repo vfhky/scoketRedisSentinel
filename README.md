@@ -13,7 +13,7 @@ root@typecodes:~# cd libevent-2.1.12-stable/
 root@typecodes:~# make -j4 && make install
 
 ## 安装后的路径
-root@a3c76987b1d2:~/libevent-2.1.12-stable# ll /usr/local/lib
+root@typecodes:~/libevent-2.1.12-stable# ll /usr/local/lib
 total 4804
 drwxr-xr-x 1 root root     4096 Jul  2 15:07 ./
 drwxr-xr-x 1 root root     4096 Mar 31  2017 ../
@@ -44,10 +44,10 @@ lrwxrwxrwx 1 root root       30 Jul  2 15:07 libevent_pthreads-2.1.so.7 -> libev
 lrwxrwxrwx 1 root root       30 Jul  2 15:07 libevent_pthreads.so -> libevent_pthreads-2.1.so.7.0.1*
 drwxr-xr-x 2 root root     4096 Jul  2 15:07 pkgconfig/
 drwxrwsr-x 1 root staff    4096 Jun 12  2022 python2.7/
-root@a3c76987b1d2:~/libevent-2.1.12-stable#
+root@typecodes:~/libevent-2.1.12-stable#
 
 ## 安装后的头文件路径
-root@a3c76987b1d2:~/libevent-2.1.12-stable# ll /usr/local/include/
+root@typecodes:~/libevent-2.1.12-stable# ll /usr/local/include/
 total 36
 drwxr-xr-x 1 root root 4096 Jul  2 15:07 ./
 drwxr-xr-x 1 root root 4096 Mar 31  2017 ../
@@ -57,7 +57,7 @@ drwxr-xr-x 2 root root 4096 Jul  2 15:07 event2/
 -rw-r--r-- 1 root root 2035 Jul  2 15:07 evhttp.h
 -rw-r--r-- 1 root root 2015 Jul  2 15:07 evrpc.h
 -rw-r--r-- 1 root root 1782 Jul  2 15:07 evutil.h
-root@a3c76987b1d2:~/libevent-2.1.12-stable#
+root@typecodes:~/libevent-2.1.12-stable#
 
 
 ## 关于库路径的问题

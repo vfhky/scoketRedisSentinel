@@ -162,12 +162,12 @@ namespace scoketRedisSentinel {
 	do {													\
 		__FORMAT_DEBUG_STRING(__VA_ARGS__);					\
         int lv = l;                                         \
-		RedisSentinelUtils::printLog(lv, __FILE__, __FUNCTION__, __LINE__, _ss.str().c_str());	\
+		Utils::printLog(lv, __FILE__, __FUNCTION__, __LINE__, _ss.str().c_str());	\
 	} while(0)
 
 
 
-    class RedisSentinelUtils {
+    class Utils {
     public:
 
         static uint32_t atou32(const char *nptr);

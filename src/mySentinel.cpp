@@ -59,11 +59,11 @@ namespace scoketRedisSentinel {
         // 解析master数量
         uint32_t masterNums = 0;
         if (mapInfo.find("sentinel_masters") != mapInfo.end()) {
-            masterNums = RedisSentinelUtils::stringToU32(mapInfo["sentinel_masters"]);
+            masterNums = Utils::stringToU32(mapInfo["sentinel_masters"]);
         }
 
         for (uint32_t index=0; index<masterNums; index++) {
-            string key = "master" + RedisSentinelUtils::toString(index);
+            string key = "master" + Utils::toString(index);
 
             // master0:name=testCache_001,status=ok,address=10.26.11.239:4038,slaves=1,sentinels=3
             if (mapInfo.find(key) == mapInfo.end()) {
@@ -73,17 +73,17 @@ namespace scoketRedisSentinel {
             }
 
             // IP:PORT
-            vector<string> vect = RedisSentinelUtils::splitStr(mapInfo[key], ",");
+            vector<string> vect = Utils::splitStr(mapInfo[key], ",");
             RedisInfo redisInfo;
             __foreach(it, vect) {
-                vector<string> vect2 = RedisSentinelUtils::splitStr(*it, "=");
+                vector<string> vect2 = Utils::splitStr(*it, "=");
                 if (2 == vect2.size()) {
                     if ("name" == vect2[0]) {
                         redisInfo.name = vect2[1];
                     }
                     if ("address" == vect2[0]) {
                         const string &address = vect2[1];
-                        vector<string> vect3 = RedisSentinelUtils::splitStr(address, ":");
+                        vector<string> vect3 = Utils::splitStr(address, ":");
                         if (2 == vect3.size()) {
                             redisInfo.ip = vect3[0];
                             redisInfo.port = vect3[1];
@@ -151,7 +151,7 @@ namespace scoketRedisSentinel {
             __foreach(it2, listInfo) {
                 const map<string, string> &singleSlave = *it2;
                 if (singleSlave.find("flags") == singleSlave.end() || singleSlave.at("flags") != "slave") {
-                    LOG(Error, "illgeal slave", RedisSentinelUtils::printMap(singleSlave));
+                    LOG(Error, "illgeal slave", Utils::printMap(singleSlave));
                     break;
                 }
 
@@ -160,8 +160,8 @@ namespace scoketRedisSentinel {
                 // ip:port
                 if (singleSlave.find("name")!= singleSlave.end()) {
                     const string &address = singleSlave.at("name");
-                    vector<string> vect1 = RedisSentinelUtils::splitStr(address, ":");
-                    LOG(Debug, masterName, RedisSentinelUtils::printList(vect1));
+                    vector<string> vect1 = Utils::splitStr(address, ":");
+                    LOG(Debug, masterName, Utils::printList(vect1));
                     if (2 == vect1.size()) {
                         redisInfo.name = masterName;
                         redisInfo.ip = vect1[0];
@@ -284,7 +284,7 @@ namespace scoketRedisSentinel {
             // 结算
             if (0x0a == c) {
                 if (0 == flag) {    // 获取slave数量
-                    slaveNums = RedisSentinelUtils::stringToU32(data.str());
+                    slaveNums = Utils::stringToU32(data.str());
                 } else if (1 == flag) {    // 解析新的一组slave中key数量*value数量
                     if (!singleSlave.empty()) {
                         LOG(Debug, "new slave start", flag);
@@ -327,7 +327,7 @@ namespace scoketRedisSentinel {
             slaveList.clear();
         }
 
-        LOG(Debug, slaveNums, slaveList.size(), RedisSentinelUtils::printListOfMap(slaveList));
+        LOG(Debug, slaveNums, slaveList.size(), Utils::printListOfMap(slaveList));
         return slaveList;
     }
 
@@ -427,7 +427,7 @@ namespace scoketRedisSentinel {
             return redisInfos;
         }
 
-        vector<string> allSlaves = RedisSentinelUtils::splitStr(hashStr, "|");
+        vector<string> allSlaves = Utils::splitStr(hashStr, "|");
         __foreach(it, allSlaves) {
             if (allRedis.find(*it) != allRedis.end()) {
                 // just use the first redis ip port

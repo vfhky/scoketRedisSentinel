@@ -18,7 +18,7 @@ namespace scoketRedisSentinel {
             exit(1);
         }
 
-        buf[readSize] = '\0';
+        buf[readSize-1] = '\0';
         LOG(Info, readSize, buf);
     }
 
@@ -35,11 +35,11 @@ namespace scoketRedisSentinel {
 
     void LibEventServer::eventCb(struct bufferevent *bev, short events, void *ctx) {
         if (events & BEV_EVENT_EOF) {
-            LOG(Error, "connection closed");
+            LOG(Debug, "connection closed");
         } else if (events & BEV_EVENT_ERROR) {
             LOG(Error, "some other error");
         } else {
-
+            LOG(Debug, "unkown event callback", events);
         }
 
         bufferevent_free(bev);
@@ -72,13 +72,13 @@ namespace scoketRedisSentinel {
         struct event_base *base = event_base_new();
         if (NULL == base) {
             LOG(Error, "event_base_new failed");
-            exit(1);
+            return -1;
         }
 
         struct sockaddr_in sin;
         memset(&sin, 0, sizeof(sin));
         sin.sin_family = AF_INET;
-        sin.sin_port = htons(8080);
+        sin.sin_port = htons(10086);
         sin.sin_addr.s_addr = htonl(INADDR_ANY);
 
 
@@ -87,7 +87,7 @@ namespace scoketRedisSentinel {
                                                                 (struct sockaddr *)&sin, sizeof(sin));
         if (NULL == listener) {
             LOG(Error, "evconnlistener_new_bind failed");
-            exit(1);
+            return -2;
         }
 
         event_base_dispatch(base);

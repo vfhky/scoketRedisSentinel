@@ -13,45 +13,45 @@ namespace scoketRedisSentinel {
 
 
 
-    uint32_t RedisSentinelUtils::atou32(const char *nptr)
+    uint32_t Utils::atou32(const char *nptr)
     {
         return strtoul(nptr,0,10);
     }
 
-    uint32_t RedisSentinelUtils::atoul(const char *nptr)
+    uint32_t Utils::atoul(const char *nptr)
     {
         return strtoul(nptr,0,10);
     }
 
-    uint64_t RedisSentinelUtils::atoull(const char *nptr)
+    uint64_t Utils::atoull(const char *nptr)
     {
         return strtoull(nptr,0,10);
     }
 
-    uint64_t RedisSentinelUtils::atou64(const char *nptr)
+    uint64_t Utils::atou64(const char *nptr)
     {
         return strtoull(nptr,0,10);
     }
 
-    int64_t RedisSentinelUtils::atoi64(const char *nptr)
+    int64_t Utils::atoi64(const char *nptr)
     {
         return strtoll(nptr,0,10);
     }
 
-    uint32_t RedisSentinelUtils::stringToU32(const string & str)
+    uint32_t Utils::stringToU32(const string & str)
     {
         return atou32(str.c_str());
     }
 
 
-    int64_t RedisSentinelUtils::stringToI64(const string & str)
+    int64_t Utils::stringToI64(const string & str)
     {
         return atoi64(str.c_str());
     }
 
 
 
-    vector<string> RedisSentinelUtils::splitStr(const string & str,
+    vector<string> Utils::splitStr(const string & str,
                                 const string & delims)
     {
     // Skip delims at beginning, find start of first token
@@ -76,7 +76,7 @@ namespace scoketRedisSentinel {
     }
 
     //take out the delim  from string
-    string RedisSentinelUtils::takeout_delims_str(const string & str,
+    string Utils::takeout_delims_str(const string & str,
                                 const string & delims)
     {
         // Skip delims at beginning, find start of first token
@@ -101,7 +101,7 @@ namespace scoketRedisSentinel {
     }
 
 
-    list<string> RedisSentinelUtils::domain2ip(const string &domain)
+    list<string> Utils::domain2ip(const string &domain)
     {
         list<string> ipList;
 
@@ -142,7 +142,7 @@ namespace scoketRedisSentinel {
         return ipList;
     }
 
-    string RedisSentinelUtils::getCurrentDateString() {
+    string Utils::getCurrentDateString() {
         time_t now;
         time(&now);
         struct tm tm_current = {0};
@@ -157,7 +157,7 @@ namespace scoketRedisSentinel {
 
 
 
-    void RedisSentinelUtils::printLog(int lv, const char *file, const char *function, int line, const char *fmt, ...) {
+    void Utils::printLog(int lv, const char *file, const char *function, int line, const char *fmt, ...) {
         static const int MAXLOGLINE = 4096;
 
         if (syslogLevel && (lv<=syslogLevel)) {
@@ -179,7 +179,11 @@ namespace scoketRedisSentinel {
             struct tm *t = ::localtime(&tv.tv_sec);
             strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", t);
 
-            std::cout << "[" << buf << ":" << tv.tv_usec << "us][" << file << ":" << function << ":" \
+        #if 0
+            std::cout << "[" << buf << ":" << tv.tv_usec << " us][" << file << ":" << function << ":" \
+                    << line << "][" << getpid() << "] ";
+        #endif
+            std::cout << "[" << buf << ":" << tv.tv_usec << " us][" << function << ":" \
                     << line << "][" << getpid() << "] ";
             if (lv <= Error) {
                 std::cout << " ***err*** ";
@@ -188,7 +192,7 @@ namespace scoketRedisSentinel {
         }
     }
 
-    bool RedisSentinelUtils::simpleCheckIpStr(const string &ip) {
+    bool Utils::simpleCheckIpStr(const string &ip) {
         if (ip.empty()) {
             return false;
         }
