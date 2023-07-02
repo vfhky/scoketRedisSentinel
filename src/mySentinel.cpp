@@ -441,6 +441,10 @@ namespace scoketRedisSentinel {
         }
 
         vector<string> allSlaves = Utils::splitStr(hashStr, "|");
+        if (allSlaves.empty()) {
+            allSlaves = Utils::splitStr(hashStr, ",");
+        }
+
         __foreach(it, allSlaves) {
             if (allRedis.find(*it) != allRedis.end()) {
                 // just use the first redis ip port

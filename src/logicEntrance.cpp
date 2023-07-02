@@ -41,16 +41,21 @@ namespace scoketRedisSentinel {
             return LogicEntrance::help();
         }
 
-        vector<string> tokens = Utils::splitStr(req, "|");
-        if (tokens.empty()) {
-            tokens = Utils::splitStr(req, ",");
-        }
-
+        vector<string> tokens = Utils::splitStr(req, " ");
         if (tokens.empty()) {
             return LogicEntrance::help();
         }
 
-        uint32_t reqType = Utils::stringToU32(tokens[0]);
+        uint32_t reqType = 0;
+        try {
+            reqType = Utils::stringToU32(tokens[0]);
+        } catch (const std::exception& e) {
+            LOG(Error, "exception", tokens[0], e.what());
+            return LogicEntrance::help();
+        } catch ( ... ) {
+            LOG(Error, "uknown exception", tokens[0]);
+            return LogicEntrance::help();
+        }
 
         switch (reqType) {
             case CLIENT_REQ_TYPE_REDIS_INFO: {

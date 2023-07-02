@@ -8,12 +8,22 @@
 namespace scoketRedisSentinel {
 
 
-    void LibEventServer::trimCR(char *buf) {
-        if (NULL == buf) {
+    void LibEventServer::trimCR(char *p) {
+        if (NULL == p) {
             return;
         }
 
-        size_t len = strlen(buf);
+        size_t len = strlen(p);
+        if (len <= 0) {
+            return;
+        }
+
+        if (0x0A == *(p + len - 1)) {
+            *(p + len - 1) = 0X00;
+        }
+        if (0x0D == *(p + len - 2)) {
+            *(p + len - 2) = 0X00;
+        }
     }
 
 
@@ -26,6 +36,7 @@ namespace scoketRedisSentinel {
         }
 
         buf[readSize] = '\0';
+        LibEventServer::trimCR(buf);
         LOG(Info, readSize, buf);
 
         string rsp = LogicEntrance::instance().handleReq(buf);
