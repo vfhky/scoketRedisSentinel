@@ -12,5 +12,4 @@
 bin/*
 *.d
 lib
-include
 
