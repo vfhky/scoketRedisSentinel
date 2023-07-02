@@ -44,6 +44,9 @@ namespace scoketRedisSentinel {
     {
     public:
 
+        static MySentinel& instance();
+
+
         ~MySentinel();
 
 
@@ -63,7 +66,7 @@ namespace scoketRedisSentinel {
         string getSlaveByMasterName(const string &masterName);
 
         // 解析所有的从库到内存
-        void pharseSlave();
+        list<RedisInfo> pharseSlave();
 
 
         /**

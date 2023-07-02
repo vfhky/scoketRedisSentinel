@@ -1,4 +1,5 @@
 #include "libEventServer.h"
+#include "logicEntrance.h"
 
 
 
@@ -7,7 +8,13 @@
 namespace scoketRedisSentinel {
 
 
+    void LibEventServer::trimCR(char *buf) {
+        if (NULL == buf) {
+            return;
+        }
 
+        size_t len = strlen(buf);
+    }
 
 
     void LibEventServer::readCb(struct bufferevent *bev, void *ctx) {
@@ -18,8 +25,12 @@ namespace scoketRedisSentinel {
             exit(1);
         }
 
-        buf[readSize-1] = '\0';
+        buf[readSize] = '\0';
         LOG(Info, readSize, buf);
+
+        string rsp = LogicEntrance::instance().handleReq(buf);
+        bufferevent_write(bev, rsp.c_str(), rsp.size());
+        LOG(Info, rsp);
     }
 
     void LibEventServer::writeCb(struct bufferevent *bev, void *ctx) {
@@ -97,6 +108,12 @@ namespace scoketRedisSentinel {
         event_base_free(base);
         return 0;
     }
+
+
+
+
+
+
 
 
 

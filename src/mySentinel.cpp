@@ -8,6 +8,13 @@ namespace scoketRedisSentinel {
 
 
 
+    MySentinel& MySentinel::instance() {
+        static MySentinel instance;
+        return instance;
+    }
+
+
+
     MySentinel::~MySentinel() {
         if( m_socket.getClientFd() ) {
             m_socket.close();
@@ -103,6 +110,7 @@ namespace scoketRedisSentinel {
             masterList.clear();
         }
 
+        // convert to map and set into memory.
         map<string/*hash*/, map<uint32_t, RedisInfo> > allMasterInfo;
         __foreach(it, masterList) {
             if (allMasterInfo.find(it->name) != allMasterInfo.end()) {
@@ -139,7 +147,7 @@ namespace scoketRedisSentinel {
     }
 
     // 获取所有的从库
-    void MySentinel::pharseSlave() {
+    list<RedisInfo> MySentinel::pharseSlave() {
         list<RedisInfo> slaveList;
 
         list<RedisInfo> masterList = this->getMaster();
@@ -190,6 +198,7 @@ namespace scoketRedisSentinel {
             }
         }
 
+        // convert to map and set into memory.
         map<string/*hash*/, map<uint32_t, RedisInfo> > allSlaveInfo;
         __foreach(it, slaveList) {
             if (allSlaveInfo.find(it->name) != allSlaveInfo.end()) {
@@ -202,6 +211,7 @@ namespace scoketRedisSentinel {
         this->setSlaveRedis(allSlaveInfo);
 
         LOG(Info, masterList.size(), this->printListRedisInfo(slaveList));
+        return slaveList;
     }
 
 
@@ -414,6 +424,9 @@ namespace scoketRedisSentinel {
         return hashIndex;
     }
 
+    /**
+     * @param type 1-slave 2-master
+    */
     list<RedisInfo> MySentinel::getRedisByHash(const uint32_t &type, const string &hashStr) {
         map<string/*hash*/, map<uint32_t, RedisInfo> > allRedis = (2 == type) \
                 ? this->getMasterRedis() : this->getSlaveRedis();

@@ -20,6 +20,12 @@
 using namespace std;
 
 namespace scoketRedisSentinel {
+
+
+
+
+
+
     class LibEventServer
     {
     public:
@@ -41,6 +47,26 @@ namespace scoketRedisSentinel {
 
 
     private:
+
+        static void trimCR(char *buf);
+
+
+
+
+
+
+
+    private:
+
+
+
+
+
+
+
+
+
+
 
     };
 
