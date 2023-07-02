@@ -37,10 +37,6 @@ namespace scoketRedisSentinel {
 
 
     string LogicEntrance::handleReq(const string &req) {
-        if (req.empty()) {
-            return LogicEntrance::help();
-        }
-
         vector<string> tokens = Utils::splitStr(req, " ");
         if (tokens.empty()) {
             return LogicEntrance::help();
@@ -49,24 +45,30 @@ namespace scoketRedisSentinel {
         uint32_t reqType = 0;
         try {
             reqType = Utils::stringToU32(tokens[0]);
+
+            switch (reqType) {
+                case CLIENT_REQ_TYPE_REDIS_INFO: {
+                    return this->handleGetRedisInfoReq(tokens);
+                }
+                case CLIENT_REQ_TYPE_LOG_LEVEL: {
+                    return this->handleResetLogLevelReq(tokens);
+                }
+                default: {
+                    return LogicEntrance::help();
+                }
+            }
+        } catch (const std::out_of_range& e) {
+            LOG(Error, "out of range exception", tokens[0], e.what());
+            return LogicEntrance::help();
+        } catch (const std::invalid_argument& e) {
+            LOG(Error, "invalid argument exception", tokens[0], e.what());
+            return LogicEntrance::help();
         } catch (const std::exception& e) {
             LOG(Error, "exception", tokens[0], e.what());
             return LogicEntrance::help();
         } catch ( ... ) {
             LOG(Error, "uknown exception", tokens[0]);
             return LogicEntrance::help();
-        }
-
-        switch (reqType) {
-            case CLIENT_REQ_TYPE_REDIS_INFO: {
-                return this->handleGetRedisInfoReq(tokens);
-            }
-            case CLIENT_REQ_TYPE_LOG_LEVEL: {
-                return this->handleResetLogLevelReq(tokens);
-            }
-            default: {
-                return LogicEntrance::help();
-            }
         }
     }
 
