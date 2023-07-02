@@ -439,6 +439,10 @@ namespace scoketRedisSentinel {
     }
 
     uint32_t MySentinel::getHashIndexCrc32(const string &key, const int32_t &redisNum) {
+        if (redisNum <= 0) {
+            LOG(Error, "illegal param", key, redisNum);
+            return 0;
+        }
         return crc32(0L, (unsigned char *)key.c_str(), key.size()) % redisNum;
     }
 

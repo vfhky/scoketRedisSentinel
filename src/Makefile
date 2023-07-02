@@ -29,7 +29,7 @@ DYNAMIC_LIBS 	:= #libprint.so
 #CURDIR    		:= $(PROJECT_DIR)/src/test
 CURDIR     		:= $(shell pwd)
 # Environment settings. The value of PROJECT_DIR shoule be set in the *nix system as the the absolute dir path of your project.
-PROJECT_DIR		:= ${CURDIR}
+PROJECT_DIR		:= $(shell dirname $(CURDIR))
 PRG_BIN_DIR		:= $(PROJECT_DIR)/bin
 PRG_LIB_DIR		:= $(PROJECT_DIR)/lib
 PRG_INC_DIR		:= $(PROJECT_DIR)/include
@@ -94,7 +94,7 @@ CFLAGS     	+= $(if $(GEN_DYN_LIB), $(addprefix -fPIC -I ,$(sort $(dir $(SRC_H))
 CXXFLAGS   	= $(CFLAGS) -D_SOCKET_TIMEOUT_POLL
 LDFLAGS    	:=
 LD_LIB_DIR 	:= #-L $(PRG_LIB_DIR)
-LD_LIBS	   	:= -lz #-lprintnolog
+LD_LIBS	   	:= -lz -levent #-lprintnolog
 XLD_FLG	   	:= -Xlinker "-(" $(LDFLAGS) -Xlinker "-)"
 
 # Add vpath.
