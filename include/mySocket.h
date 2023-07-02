@@ -10,7 +10,7 @@
 
 using namespace std;
 
-namespace scoketRedisSentinel {
+namespace socketRedisSentinel {
     class MySocket
     {
     public:

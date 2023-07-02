@@ -5,7 +5,7 @@
 
 
 
-namespace scoketRedisSentinel {
+namespace socketRedisSentinel {
 
 
     void LibEventServer::trimCR(char *p) {

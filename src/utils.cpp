@@ -3,7 +3,7 @@
 
 
 
-namespace scoketRedisSentinel {
+namespace socketRedisSentinel {
 
 
 

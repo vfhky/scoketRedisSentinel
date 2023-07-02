@@ -1,10 +1,11 @@
 #include "mySentinel.h"
 #include "utils.h"
 #include "libEventServer.h"
+#include "myDaemon.h"
 
 
 
-using namespace scoketRedisSentinel;
+using namespace socketRedisSentinel;
 
 
 
@@ -12,6 +13,9 @@ int main(int argc, char const* argv[])
 {
     // syslogLevel = Error;
     syslogLevel = Info;
+
+
+    MyDaeMon::createDaemon();
 
     // init tcp server
     LibEventServer server;

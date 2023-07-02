@@ -4,7 +4,7 @@
 
 
 
-namespace scoketRedisSentinel {
+namespace socketRedisSentinel {
 
 
     MySocket::MySocket() {
