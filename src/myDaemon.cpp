@@ -27,9 +27,11 @@ bool MyDaeMon::createDaemon() {
         return false;
     }
 
+#if 0
     close(STDIN_FILENO);
     close(STDOUT_FILENO);
     close(STDERR_FILENO);
+#endif
 
     chdir("/");
 

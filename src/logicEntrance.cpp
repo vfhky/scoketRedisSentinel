@@ -73,15 +73,10 @@ namespace socketRedisSentinel {
     }
 
     string LogicEntrance::makeRspData(const CLIENT_REQ_REDIS_TYPE &type, const list<RedisInfo> &infos) {
+        const string bMasterDesc = (CLIENT_REQ_REDIS_TYPE_MASTER & type) ? "master " : "slave ";
         stringstream ss;
-        if (CLIENT_REQ_REDIS_TYPE_MASTER & type) {
-            ss << "==> master " << std::endl;
-        } else {
-            ss << "==> slave " << std::endl;
-        }
-
         __foreach(it, infos) {
-            ss << it->name << " " << it->ip << " " << it->port << std::endl;
+            ss << bMasterDesc << it->name << " " << it->ip << " " << it->port << std::endl;
         }
 
         return ss.str();

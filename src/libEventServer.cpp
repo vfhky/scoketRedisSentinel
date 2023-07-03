@@ -31,7 +31,7 @@ namespace socketRedisSentinel {
         char buf[4096] = {0x00};
         size_t readSize = bufferevent_read(bev, buf, sizeof(buf) - 1);
         if (readSize < 0) {
-            LOG(Error, "bufferevent_read failed", buf);
+            LOG(Error, "bufferevent_read failed", buf, strerror(errno));
             exit(1);
         }
 
@@ -48,7 +48,7 @@ namespace socketRedisSentinel {
         char buf[4096] = {0x00};
         size_t readSize = bufferevent_read(bev, buf, sizeof(buf));
         if (readSize < 0) {
-            LOG(Error, "bufferevent_read failed", buf);
+            LOG(Error, "bufferevent_read failed", buf, strerror(errno));
             exit(1);
         }
 
@@ -56,10 +56,12 @@ namespace socketRedisSentinel {
     }
 
     void LibEventServer::eventCb(struct bufferevent *bev, short events, void *ctx) {
-        if (events & BEV_EVENT_EOF) {
+        if (events & BEV_EVENT_CONNECTED) {
+            LOG(Debug, "connection success");
+        } else if (events & BEV_EVENT_EOF) {
             LOG(Debug, "connection closed");
         } else if (events & BEV_EVENT_ERROR) {
-            LOG(Error, "some other error");
+            LOG(Error, "some other error", strerror(errno));
         } else {
             LOG(Debug, "unkown event callback", events);
         }
@@ -77,7 +79,7 @@ namespace socketRedisSentinel {
         struct event_base *base = evconnlistener_get_base(listener);
         struct bufferevent *bev = bufferevent_socket_new(base, fd, BEV_OPT_CLOSE_ON_FREE);
         if (NULL == bev) {
-            LOG(Error, "bufferevent_socket_new failed", fd);
+            LOG(Error, "bufferevent_socket_new failed", fd, strerror(errno));
             return;
         }
 
@@ -93,7 +95,7 @@ namespace socketRedisSentinel {
     int LibEventServer::init() {
         struct event_base *base = event_base_new();
         if (NULL == base) {
-            LOG(Error, "event_base_new failed");
+            LOG(Error, "event_base_new failed", strerror(errno));
             return -1;
         }
 
@@ -108,7 +110,7 @@ namespace socketRedisSentinel {
                                                                 LEV_OPT_CLOSE_ON_FREE | LEV_OPT_REUSEABLE, -1,
                                                                 (struct sockaddr *)&sin, sizeof(sin));
         if (NULL == listener) {
-            LOG(Error, "evconnlistener_new_bind failed");
+            LOG(Error, "evconnlistener_new_bind failed", strerror(errno));
             return -2;
         }
 
