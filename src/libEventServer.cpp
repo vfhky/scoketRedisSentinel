@@ -31,7 +31,7 @@ namespace socketRedisSentinel {
         char buf[4096] = {0x00};
         size_t readSize = bufferevent_read(bev, buf, sizeof(buf) - 1);
         if (readSize < 0) {
-            LOG(Error, "bufferevent_read failed", buf, strerror(errno));
+            LOG(Error, "bufferevent_read failed", buf, evutil_socket_error_to_string(EVUTIL_SOCKET_ERROR()));
             exit(1);
         }
 
@@ -48,22 +48,32 @@ namespace socketRedisSentinel {
         char buf[4096] = {0x00};
         size_t readSize = bufferevent_read(bev, buf, sizeof(buf));
         if (readSize < 0) {
-            LOG(Error, "bufferevent_read failed", buf, strerror(errno));
+            LOG(Error, "bufferevent_read failed", buf, evutil_socket_error_to_string(EVUTIL_SOCKET_ERROR()));
             exit(1);
         }
 
         LOG(Info, readSize, buf);
     }
 
-    void LibEventServer::eventCb(struct bufferevent *bev, short events, void *ctx) {
-        if (events & BEV_EVENT_CONNECTED) {
+    void LibEventServer::eventCb(struct bufferevent *bev, short event, void *ctx) {
+        evutil_socket_t fd = bufferevent_getfd(bev);
+        int i_errCode = EVUTIL_SOCKET_ERROR();
+        LOG(Debug, fd, i_errCode, evutil_socket_error_to_string(i_errCode) );
+
+        if(event & BEV_EVENT_TIMEOUT) {
+            LOG(Debug, "timeout reached");
+        } else if (event & BEV_EVENT_CONNECTED) {
             LOG(Debug, "connection success");
-        } else if (events & BEV_EVENT_EOF) {
+        } else if (event & BEV_EVENT_EOF) {
             LOG(Debug, "connection closed");
-        } else if (events & BEV_EVENT_ERROR) {
-            LOG(Error, "some other error", strerror(errno));
+        } else if (event & BEV_EVENT_ERROR) {
+            LOG(Error, "some other error");
+        } else if(event & BEV_EVENT_READING) {
+            LOG(Debug, "read data is ready");
+        } else if(event & BEV_EVENT_WRITING ) {
+            LOG(Debug, "write data is ready");
         } else {
-            LOG(Debug, "unkown event callback", events);
+            LOG(Debug, "unkown event callback", event);
         }
 
         bufferevent_free(bev);
@@ -79,7 +89,7 @@ namespace socketRedisSentinel {
         struct event_base *base = evconnlistener_get_base(listener);
         struct bufferevent *bev = bufferevent_socket_new(base, fd, BEV_OPT_CLOSE_ON_FREE);
         if (NULL == bev) {
-            LOG(Error, "bufferevent_socket_new failed", fd, strerror(errno));
+            LOG(Error, "bufferevent_socket_new failed", fd, evutil_socket_error_to_string(EVUTIL_SOCKET_ERROR()));
             return;
         }
 
@@ -95,7 +105,7 @@ namespace socketRedisSentinel {
     int LibEventServer::init() {
         struct event_base *base = event_base_new();
         if (NULL == base) {
-            LOG(Error, "event_base_new failed", strerror(errno));
+            LOG(Error, "event_base_new failed", evutil_socket_error_to_string(EVUTIL_SOCKET_ERROR()));
             return -1;
         }
 
@@ -110,7 +120,7 @@ namespace socketRedisSentinel {
                                                                 LEV_OPT_CLOSE_ON_FREE | LEV_OPT_REUSEABLE, -1,
                                                                 (struct sockaddr *)&sin, sizeof(sin));
         if (NULL == listener) {
-            LOG(Error, "evconnlistener_new_bind failed", strerror(errno));
+            LOG(Error, "evconnlistener_new_bind failed", evutil_socket_error_to_string(EVUTIL_SOCKET_ERROR()));
             return -2;
         }
 

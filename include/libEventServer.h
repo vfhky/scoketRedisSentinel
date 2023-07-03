@@ -35,7 +35,7 @@ namespace socketRedisSentinel {
 
         static void writeCb(struct bufferevent *bev, void *ctx);
 
-        static void eventCb(struct bufferevent *bev, short events, void *ctx);
+        static void eventCb(struct bufferevent *bev, short event, void *ctx);
 
         static void listenerCb(struct evconnlistener *listener, evutil_socket_t fd,
                 struct sockaddr *address, int socklen, void *ctx);
