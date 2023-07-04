@@ -8,11 +8,6 @@ namespace socketRedisSentinel {
 
 
 
-    int syslogLevel;
-
-
-
-
     uint32_t Utils::atou32(const char *nptr)
     {
         return strtoul(nptr,0,10);
@@ -157,14 +152,15 @@ namespace socketRedisSentinel {
 
 
 
-    void Utils::printLog(int lv, const char *file, const char *function, int line, const char *fmt, ...) {
+    void Utils::printLog(LOG_LEVEL lv, const char *file, const char *function, int line, const char *fmt, ...) {
         static const int MAXLOGLINE = 4096;
 
-        if (syslogLevel && (lv<=syslogLevel)) {
+        LOG_LEVEL syslogLevel = Config::getLogLv();
+        if (syslogLevel && (lv <= syslogLevel)) {
             char msg[MAXLOGLINE];
 
             va_list		ap;
-            va_start(ap,fmt);
+            va_start(ap, fmt);
             int ret = vsnprintf( msg, MAXLOGLINE, fmt, ap );
             va_end(ap);
 
@@ -179,16 +175,21 @@ namespace socketRedisSentinel {
             struct tm *t = ::localtime(&tv.tv_sec);
             strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", t);
 
-        #if 0
-            std::cout << "[" << buf << ":" << tv.tv_usec << " us][" << file << ":" << function << ":" \
-                    << line << "][" << getpid() << "] ";
-        #endif
-            std::cout << "[" << buf << ":" << tv.tv_usec << " us][" << function << ":" \
+            stringstream ss;
+            const char *fileNoPath = fileName(file);
+            ss << "[" << buf << ":" << tv.tv_usec << " us][" << fileNoPath << ":" << function << ":" \
                     << line << "][" << getpid() << "] ";
             if (lv <= Error) {
-                std::cout << " ***err*** ";
+                ss << " ***err*** ";
             }
-            std::cout << msg << std::endl;
+
+            ss << msg;
+            if (LOG_TYPE_STDOUT & Config::getLogType()) {
+                std::cout << ss.str() << std::endl;
+            }
+            if (LOG_TYPE_FILE & Config::getLogType()) {
+                Logger::logToFile(ss.str());
+            }
         }
     }
 

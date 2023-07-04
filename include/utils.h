@@ -21,6 +21,8 @@
 #include <stdexcept>
 
 #include "common.h"
+#include "logger.h"
+#include "config.h"
 
 
 
@@ -30,12 +32,6 @@ using namespace std;
 namespace socketRedisSentinel {
 
 
-
-
-    extern int syslogLevel;
-
-
-    // 计算__VA_ARGS__参数个数辅助宏
     #define __ARG_N(											\
         _1, _2, _3, _4, _5, _6, _7, _8, _9,_10,					\
         _11,_12,_13,_14,_15,_16,_17,_18,_19,_20,				\
@@ -62,7 +58,6 @@ namespace socketRedisSentinel {
     #define __NARG__(...) __NARG_I(__VA_ARGS__, __RSEQ_N())
 
 
-    //格式化__VA_ARGS__辅助宏
     #define __VFUNC__(name, n) name##n
 
     #define __VFUNC(name, n) __VFUNC__(name, n)
@@ -162,7 +157,7 @@ namespace socketRedisSentinel {
     #define LOG(l, ...) 								\
 	do {													\
 		__FORMAT_DEBUG_STRING(__VA_ARGS__);					\
-        int lv = l;                                         \
+        LOG_LEVEL lv = l;                                         \
 		Utils::printLog(lv, __FILE__, __FUNCTION__, __LINE__, _ss.str().c_str());	\
 	} while(0)
 
@@ -294,7 +289,7 @@ namespace socketRedisSentinel {
         static string getCurrentDateString();
 
 
-        static void printLog(int lv, const char *file, const char *function, int line, const char *fmt, ...);
+        static void printLog(LOG_LEVEL lv, const char *file, const char *function, int line, const char *fmt, ...);
 
 
         static bool simpleCheckIpStr(const string &ip);

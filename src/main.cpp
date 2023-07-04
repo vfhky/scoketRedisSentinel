@@ -1,7 +1,6 @@
 #include "mySentinel.h"
 #include "utils.h"
-#include "libEventServer.h"
-#include "myDaemon.h"
+#include "demonize.h"
 
 
 
@@ -9,22 +8,47 @@ using namespace socketRedisSentinel;
 
 
 
-int main(int argc, char const* argv[])
+int main(int argc, char * argv[])
 {
-    // syslogLevel = Error;
-    syslogLevel = Info;
+    int opt = 0;
+    LOG_LEVEL sysLogLv = Debug;
+    LOG_TYPE sysLogType = LOG_TYPE_ALL;
 
-
-    MyDaeMon::createDaemon();
-
-    // init tcp server
-    LibEventServer server;
-    if (0 != server.init()) {
-        LOG(Error, 0, "LibEventServer init tcp server failed");
-        return 1;
+    while ((opt = getopt(argc, argv, "hl:t:")) != -1) {
+        switch (opt) {
+            case 'h':
+                std::cout << "Usage: " << argv[0] << " [-h] [-l] [-t]" << std::endl;
+                std::cout << "  -h: display help message" << std::endl;
+                std::cout << "  -l: set the system log level , should be in 1-7." << std::endl;
+                std::cout << "  -t: set the log type , 1-just print on screen 2-write to file." << std::endl;
+                exit(0);
+            case 'l':
+                sysLogLv = (LOG_LEVEL)Utils::stringToU32(optarg);
+                break;
+            case 't':
+                sysLogType = (LOG_TYPE)Utils::stringToU32(optarg);
+                break;
+            default:
+                std::cout << "not support , use " << argv[0] << " -h to get help info." << std::endl;
+                exit(1);
+        }
     }
 
-
-    return 0;
+    try {
+        Demonize::initSrv(sysLogLv, sysLogType);
+    } catch (const std::out_of_range& e) {
+        LOG(Error, "out of range exception", sysLogLv, sysLogType, e.what());
+        exit(1);
+    } catch (const std::invalid_argument& e) {
+        LOG(Error, "invalid argument exception", sysLogLv, sysLogType, e.what());
+        exit(1);
+    } catch (const std::exception& e) {
+        LOG(Error, "exception", sysLogLv, sysLogType, e.what());
+        exit(1);
+    } catch ( ... ) {
+        LOG(Error, "uknown exception", sysLogLv, sysLogType);
+        exit(1);
+    }
 }
+
 

@@ -72,13 +72,19 @@ typedef unsigned char bool;
 
 
 
-enum LogLevel{
+enum LOG_LEVEL {
 	Fatal = 0,	//0
 	Error = 3,	//3
 	Warn = 4,	//4
 	Notice = 5,//5
 	Info = 6,	//6
 	Debug = 7,	//7
+};
+
+enum LOG_TYPE {
+	LOG_TYPE_STDOUT = 0x01,
+	LOG_TYPE_FILE = 0x02,
+	LOG_TYPE_ALL = 0x03,
 };
 
 
@@ -90,6 +96,8 @@ enum LogLevel{
 
 
 
+
+#define fileName(x) strrchr(x,'/')?strrchr(x,'/')+1:x
 
 
 
