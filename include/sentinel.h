@@ -74,7 +74,7 @@ namespace socketRedisSentinel {
          * @param hashStr format：hash_001|hash_0002|....
          * @return master or slave redis infos
         */
-        list<RedisInfo> getRedisByHash(const uint32_t &type, const string &hashStr);
+        list<RedisInfo> getRedisByType(const uint32_t &type, const string &hashStr);
 
 
 

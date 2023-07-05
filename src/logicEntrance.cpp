@@ -215,11 +215,15 @@ namespace socketRedisSentinel {
             stringstream rspData;
             if (req.redisType & CLIENT_REQ_REDIS_TYPE_MASTER) {
                 list<RedisInfo> master = cmd.getMaster();
-                rspData << LogicEntrance::makeRspData(CLIENT_REQ_REDIS_TYPE_MASTER, master);
+                if (!req.poolName.empty()) {
+                    rspData << LogicEntrance::makeRspData(CLIENT_REQ_REDIS_TYPE_MASTER, master);
+                }
             }
             if (req.redisType & CLIENT_REQ_REDIS_TYPE_SLVAVE) {
                 list<RedisInfo> slave = cmd.pharseSlave();
-                rspData << LogicEntrance::makeRspData(CLIENT_REQ_REDIS_TYPE_SLVAVE, slave);
+                if (!req.poolName.empty()) {
+                    rspData << LogicEntrance::makeRspData(CLIENT_REQ_REDIS_TYPE_SLVAVE, slave);
+                }
             }
 
             if (req.poolName.empty()) {
@@ -231,13 +235,13 @@ namespace socketRedisSentinel {
             rspData.str("");
             // master redis infos
             if (req.redisType & CLIENT_REQ_REDIS_TYPE_MASTER) {
-                list<RedisInfo> allMasterRedis = cmd.getRedisByHash(2, req.poolName);
+                list<RedisInfo> allMasterRedis = cmd.getRedisByType(CLIENT_REQ_REDIS_TYPE_MASTER, req.poolName);
                 rspData << LogicEntrance::makeRspData(CLIENT_REQ_REDIS_TYPE_MASTER, allMasterRedis);
             }
 
             // slave redis infos
             if (req.redisType & CLIENT_REQ_REDIS_TYPE_SLVAVE) {
-                list<RedisInfo> hashSlaveRedis = cmd.getRedisByHash(1, req.poolName);
+                list<RedisInfo> hashSlaveRedis = cmd.getRedisByType(CLIENT_REQ_REDIS_TYPE_SLVAVE, req.poolName);
                 rspData << LogicEntrance::makeRspData(CLIENT_REQ_REDIS_TYPE_SLVAVE, hashSlaveRedis);
             }
 
@@ -293,11 +297,11 @@ namespace socketRedisSentinel {
             // master redis infos
             if (req.redisType & CLIENT_REQ_REDIS_TYPE_MASTER) {
                 cmd.getMaster();
-                list<RedisInfo> allMasterRedis = cmd.getRedisByHash(2, req.poolName);
+                list<RedisInfo> allMasterRedis = cmd.getRedisByType(CLIENT_REQ_REDIS_TYPE_MASTER, req.poolName);
 
                 if (allMasterRedis.empty()) {
                     rspData << "# no master redis infos";
-                    LOG(Info, "no redis infos", req.dump());
+                    LOG(Error, "no redis infos", req.dump());
                 } else {
                     uint32_t hashIndex = cmd.redisComHash(req.hashKey, allMasterRedis.size());
                     uint32_t index = 0;
@@ -316,7 +320,7 @@ namespace socketRedisSentinel {
             // slave redis infos
             if (req.redisType & CLIENT_REQ_REDIS_TYPE_SLVAVE) {
                 list<RedisInfo> slave = cmd.pharseSlave();
-                list<RedisInfo> hashSlaveRedis = cmd.getRedisByHash(1, req.poolName);
+                list<RedisInfo> hashSlaveRedis = cmd.getRedisByType(CLIENT_REQ_REDIS_TYPE_SLVAVE, req.poolName);
 
                 if (hashSlaveRedis.empty()) {
                     rspData << "# no master redis infos";

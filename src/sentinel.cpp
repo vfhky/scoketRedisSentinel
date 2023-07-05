@@ -403,10 +403,10 @@ namespace socketRedisSentinel {
     }
 
     /**
-     * @param type 1-slave 2-master
+     * @param type 1-master 2-slave
     */
-    list<RedisInfo> Sentinel::getRedisByHash(const uint32_t &type, const string &hashStr) {
-        map<string/*hash*/, map<uint32_t, RedisInfo> > allRedis = (2 == type) \
+    list<RedisInfo> Sentinel::getRedisByType(const uint32_t &type, const string &hashStr) {
+        map<string/*hash*/, map<uint32_t, RedisInfo> > allRedis = (CLIENT_REQ_REDIS_TYPE_MASTER == type) \
                 ? this->getMasterRedis() : this->getSlaveRedis();
 
         list<RedisInfo> redisInfos;
