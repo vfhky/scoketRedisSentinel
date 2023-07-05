@@ -39,10 +39,10 @@ namespace socketRedisSentinel {
 
 
     ClientReqInfo LogicEntrance::pharseReq(const string &req) {
-        ClientReqInfo info;
+        ClientReqInfo reqInfo;
         if (req.empty()) {
-            LOG(Info, info.dump());
-            return info;
+            LOG(Info, reqInfo.dump());
+            return reqInfo;
         }
 
         /**
@@ -76,22 +76,23 @@ namespace socketRedisSentinel {
                 // settle
                 if (1 == flag || index == length - 1) {
                     string value = ss.str();
+                    std::transform(key.begin(), key.end(), key.begin(), ::tolower);
                     if (key == "type") {
-                        info.type = static_cast<CLIENT_REQ_TYPE>(Utils::stringToU32(value));
+                        reqInfo.type = static_cast<CLIENT_REQ_TYPE>(Utils::stringToU32(value));
                     } else if (key == "ip") {
-                        info.ip = value;
+                        reqInfo.ip = value;
                     } else if (key == "port") {
-                        info.port = (uint16_t)Utils::stringToU32(value);
-                    } else if (key == "redisType") {
-                        info.redisType = static_cast<CLIENT_REQ_REDIS_TYPE>(Utils::stringToU32(value));
-                    } else if (key == "poolName") {
-                        info.poolName = value;
-                    } else if (key == "hashKey") {
-                        info.hashKey = value;
-                    } else if (key == "logLv") {
-                        info.logLv = Utils::stringToI64(value);
-                    } else if (key == "logType") {
-                        info.logType = Utils::stringToI64(value);
+                        reqInfo.port = (uint16_t)Utils::stringToU32(value);
+                    } else if (key == "redistype") {
+                        reqInfo.redisType = static_cast<CLIENT_REQ_REDIS_TYPE>(Utils::stringToU32(value));
+                    } else if (key == "poolname") {
+                        reqInfo.poolName = value;
+                    } else if (key == "hashkey") {
+                        reqInfo.hashKey = value;
+                    } else if (key == "loglv") {
+                        reqInfo.logLv = Utils::stringToI64(value);
+                    } else if (key == "logtype") {
+                        reqInfo.logType = Utils::stringToI64(value);
                     } else {
                         //
                     }
@@ -116,8 +117,8 @@ namespace socketRedisSentinel {
             }
         }
 
-        LOG(Info, info.dump());
-        return info;
+        LOG(Info, reqInfo.dump());
+        return reqInfo;
     }
 
     string LogicEntrance::handleReq(const string &req) {
@@ -280,9 +281,9 @@ namespace socketRedisSentinel {
             // ======= begin main logic
             Sentinel &cmd = Sentinel::instance();
             if (!cmd.init(ip, req.port)) {
-                LOG(Error, "init failed", ip, req.port);
                 stringstream ss;
                 ss << "can not connect sentinel [" << ip << ":" << req.port << "]";
+                LOG(Error, "init failed", ip, req.port);
                 return ss.str();
             }
 
@@ -361,10 +362,16 @@ namespace socketRedisSentinel {
             if (-1 != req.logLv) {
                 Config::instance().setLogLv(static_cast<LOG_LEVEL>(req.logLv));
                 rspData << "# set log level ok " << req.logLv << std::endl;
+            } else {
+                LOG_LEVEL lv = Config::instance().getLogLv();
+                rspData << "# not set log level , so keep old lv ==>" << lv << std::endl;
             }
             if (-1 != req.logType) {
                 Config::instance().setLogType(static_cast<LOG_TYPE>(req.logType));
                 rspData << "# set log type ok " << req.logType << std::endl;
+            } else {
+                LOG_TYPE type = Config::instance().getLogType();
+                rspData << "# not set log type , so keep old type ==>" << type << std::endl;
             }
 
             LOG(Info, rspData.str());
