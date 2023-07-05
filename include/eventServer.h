@@ -1,5 +1,5 @@
-#ifndef __SCOKET_REDIS_SENTINEL_LIB_EVENT_SERVER_H__
-#define __SCOKET_REDIS_SENTINEL_LIB_EVENT_SERVER_H__
+#ifndef __SCOKET_REDIS_SENTINEL_EVENT_SERVER_H__
+#define __SCOKET_REDIS_SENTINEL_EVENT_SERVER_H__
 
 
 
@@ -28,7 +28,7 @@ namespace socketRedisSentinel {
 
 
 
-    class LibEventServer
+    class EventServer
     {
     public:
 

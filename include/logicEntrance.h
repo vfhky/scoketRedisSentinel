@@ -6,7 +6,7 @@
 
 #include "common.h"
 #include "utils.h"
-#include "mySentinel.h"
+#include "sentinel.h"
 
 
 using namespace std;

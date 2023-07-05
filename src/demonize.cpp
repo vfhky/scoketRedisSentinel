@@ -68,16 +68,17 @@ void Demonize::initSrv(const LOG_LEVEL &sysLogLv, const LOG_TYPE &sysLogType) {
         close(STDERR_FILENO);
     #endif
 
+    Config::instance().setLogLv(sysLogLv);
+    Config::instance().setLogType(sysLogType);
+
     // init tcp server
-    LibEventServer server;
+    EventServer server;
     if (0 != server.init()) {
-        LOG(Error, 0, "LibEventServer init tcp server failed", sysLogLv, sysLogType);
+        LOG(Error, 0, "EventServer init tcp server failed", sysLogLv, sysLogType);
         exit(2);
     }
 
-    Config::instance().setLogLv(sysLogLv);
-    Config::instance().setLogType(sysLogType);
-    LOG(Info, "server exit ", sysLogLv, sysLogType);
+    LOG(Error, "server exit ", sysLogLv, sysLogType);
 }
 
 

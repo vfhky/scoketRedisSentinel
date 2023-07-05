@@ -1,5 +1,5 @@
-#ifndef __SCOKET_REDIS_SENTINEL_SOCKET_H__
-#define __SCOKET_REDIS_SENTINEL_SOCKET_H__
+#ifndef __SCOKET_REDIS_SENTINEL_TCP_WRAP_H__
+#define __SCOKET_REDIS_SENTINEL_TCP_WRAP_H__
 
 
 
@@ -11,10 +11,12 @@
 using namespace std;
 
 namespace socketRedisSentinel {
-    class MySocket
+
+
+    class TcpWrap
     {
     public:
-        MySocket();
+        TcpWrap();
 
 
         bool connect(const string &ip, const uint16_t &port);

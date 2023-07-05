@@ -1,4 +1,4 @@
-#include "mySocket.h"
+#include "tcpWrap.h"
 
 
 
@@ -7,12 +7,12 @@
 namespace socketRedisSentinel {
 
 
-    MySocket::MySocket() {
+    TcpWrap::TcpWrap() {
         m_client_fd = -1;
     }
 
 
-    bool MySocket::connect(const string &ip, const uint16_t &port) {
+    bool TcpWrap::connect(const string &ip, const uint16_t &port) {
         struct sockaddr_in serv_addr;
         if ((m_client_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
             LOG(Error, "creation error", ip, port);
@@ -39,7 +39,7 @@ namespace socketRedisSentinel {
         return true;
     }
 
-    void MySocket::setSocketOpt(const int64_t &rcvSec, const int64_t &sendSec) {
+    void TcpWrap::setSocketOpt(const int64_t &rcvSec, const int64_t &sendSec) {
         struct timeval timeout;
         timeout.tv_sec = rcvSec;
         timeout.tv_usec = 0;
@@ -55,7 +55,7 @@ namespace socketRedisSentinel {
         }
     }
 
-    bool MySocket::send(const string &message) {
+    bool TcpWrap::send(const string &message) {
         string data = message + "\n";
         if (::send(m_client_fd, data.c_str(), data.size(), 0) < 0) {
             LOG(Error, "failed to send message", message);
@@ -67,7 +67,7 @@ namespace socketRedisSentinel {
     }
 
 
-    bool MySocket::recv(string &message) {
+    bool TcpWrap::recv(string &message) {
         char buffer[4096*10] = {0x00};
 
 
@@ -148,12 +148,12 @@ namespace socketRedisSentinel {
         return true;
     }
 
-    void MySocket::close() {
+    void TcpWrap::close() {
         // closing the connected socket
         ::close(m_client_fd);
     }
 
-    int MySocket::getClientFd() {
+    int TcpWrap::getClientFd() {
         return m_client_fd;
     }
 

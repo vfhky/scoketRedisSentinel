@@ -1,4 +1,4 @@
-#include "mySentinel.h"
+#include "sentinel.h"
 #include "utils.h"
 #include "demonize.h"
 

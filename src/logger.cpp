@@ -94,7 +94,7 @@ namespace socketRedisSentinel {
             return;
         }
 
-        sprintf(logFile, "%s/%s", dirName, buf);
+        sprintf(logFile, "%s/%s%s", dirName, "trace.", buf);
         if ((fp = Logger::openFile(logFile))== NULL) {
             return;
         }

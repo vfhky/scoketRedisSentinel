@@ -1,10 +1,10 @@
-#ifndef __SCOKET_REDIS_SENTINEL_MY_SENTINEL_H__
-#define __SCOKET_REDIS_SENTINEL_MY_SENTINEL_H__
+#ifndef __SCOKET_REDIS_SENTINEL_SENTINEL_H__
+#define __SCOKET_REDIS_SENTINEL_SENTINEL_H__
 
 
 
 
-#include "mySocket.h"
+#include "tcpWrap.h"
 #include "utils.h"
 
 
@@ -40,14 +40,14 @@ namespace socketRedisSentinel {
 
 
 
-    class MySentinel
+    class Sentinel
     {
     public:
 
-        static MySentinel& instance();
+        static Sentinel& instance();
 
 
-        ~MySentinel();
+        ~Sentinel();
 
 
 
@@ -120,7 +120,7 @@ namespace socketRedisSentinel {
 
 
     private:
-        MySocket m_socket;
+        TcpWrap m_socket;
 
         map<string/*hash*/, map<uint32_t, RedisInfo> > m_slaveRedis;
         map<string/*hash*/, map<uint32_t, RedisInfo> > m_masterRedis;

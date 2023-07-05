@@ -1,4 +1,4 @@
-#include "libEventServer.h"
+#include "eventServer.h"
 #include "logicEntrance.h"
 
 
@@ -8,7 +8,7 @@
 namespace socketRedisSentinel {
 
 
-    void LibEventServer::trimCR(char *p) {
+    void EventServer::trimCR(char *p) {
         if (NULL == p) {
             return;
         }
@@ -27,7 +27,7 @@ namespace socketRedisSentinel {
     }
 
 
-    void LibEventServer::readCb(struct bufferevent *bev, void *ctx) {
+    void EventServer::readCb(struct bufferevent *bev, void *ctx) {
         char buf[4096] = {0x00};
         size_t readSize = bufferevent_read(bev, buf, sizeof(buf) - 1);
         if (readSize < 0) {
@@ -36,7 +36,7 @@ namespace socketRedisSentinel {
         }
 
         buf[readSize] = '\0';
-        LibEventServer::trimCR(buf);
+        EventServer::trimCR(buf);
         LOG(Info, readSize, buf);
 
         string rsp = LogicEntrance::instance().handleReq(buf);
@@ -44,7 +44,7 @@ namespace socketRedisSentinel {
         LOG(Info, rsp);
     }
 
-    void LibEventServer::writeCb(struct bufferevent *bev, void *ctx) {
+    void EventServer::writeCb(struct bufferevent *bev, void *ctx) {
         char buf[4096] = {0x00};
         size_t readSize = bufferevent_read(bev, buf, sizeof(buf));
         if (readSize < 0) {
@@ -55,7 +55,7 @@ namespace socketRedisSentinel {
         LOG(Info, readSize, buf);
     }
 
-    void LibEventServer::eventCb(struct bufferevent *bev, short event, void *ctx) {
+    void EventServer::eventCb(struct bufferevent *bev, short event, void *ctx) {
         evutil_socket_t fd = bufferevent_getfd(bev);
         int i_errCode = EVUTIL_SOCKET_ERROR();
         LOG(Debug, fd, i_errCode, evutil_socket_error_to_string(i_errCode) );
@@ -81,7 +81,7 @@ namespace socketRedisSentinel {
 
 
 
-    void LibEventServer::listenerCb(struct evconnlistener *listener, evutil_socket_t fd,
+    void EventServer::listenerCb(struct evconnlistener *listener, evutil_socket_t fd,
                 struct sockaddr *address, int socklen, void *ctx)
     {
         LOG(Debug, "accept client", fd);
@@ -94,15 +94,15 @@ namespace socketRedisSentinel {
         }
 
 
-        bufferevent_data_cb rCb = LibEventServer::readCb;
+        bufferevent_data_cb rCb = EventServer::readCb;
         bufferevent_data_cb wCb = NULL;
-        bufferevent_event_cb eventCb = LibEventServer::eventCb;
+        bufferevent_event_cb eventCb = EventServer::eventCb;
 
         bufferevent_setcb(bev, rCb, wCb, eventCb, &fd);
         bufferevent_enable(bev, EV_READ | EV_PERSIST);
     }
 
-    int LibEventServer::init() {
+    int EventServer::init() {
         struct event_base *base = event_base_new();
         if (NULL == base) {
             LOG(Error, "event_base_new failed", evutil_socket_error_to_string(EVUTIL_SOCKET_ERROR()));
@@ -133,6 +133,8 @@ namespace socketRedisSentinel {
         event_base_free(base);
         return 0;
     }
+
+
 
 
 

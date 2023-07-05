@@ -17,15 +17,14 @@ namespace socketRedisSentinel {
 
     string LogicEntrance::help() {
         stringstream ss;
-        ss << "input format: -type 1 -ip sentinelDomain/ip -port port -redisType 1 [-poolName poolName] [-hashKey hashKey] [-logType 1 -logLv 1]" << "\n";
-        ss << "===> @param reqType :  1-get redis info.  2-get target redis ip  3-modify log level." << "\n"
-            << "===> @param sentinelDomain  :  sentinel doamin or ip" << "\n"
+        ss << "input format: -type 1 -ip a -port b -redisType c [-poolName d] [-hashKey e] [-logType f -logLv g]" << "\n";
+        ss << "===> @param type :  1-get redis info.  2/3-get redis ip by common/crc32 hash  4-modify log type/lv." << "\n"
+            << "===> @param ip  :  sentinel doamin or ip" << "\n"
             << "===> @param port  :  sentinel port" << "\n"
-            << "===> @param redisType  :  1-means get slave redis info. "\
-                    "2-means get master redis info 3-means the result equal : 1 | 2" << "\n"
+            << "===> @param redisType  :  1-get slave redis info. 2-get master redis info 3-both 1 and 2" << "\n"
             << "===> @param -poolName  :  not must. when you want to assign special"
                     " redis poolName for the sentinelDomain." << "\n"
-            << "===> @param -hashKey  :  not must, used when reqType equals 2 to get target redis ip." << "\n";
+            << "===> @param -hashKey  :  not must, used when type equals 2 to get target redis ip." << "\n";
 
         ss << "===> example : " << "\n";
         ss << "=====> 1. to get all slave redis info, should input : "
@@ -34,7 +33,7 @@ namespace socketRedisSentinel {
         << "1 inner-sentinel.typecodes.com 3600 2 test_001|test_002" << "\n";
         ss << "=====> 3. to get target master redis ip by common hash key: "
         << "2 inner-sentinel.typecodes.com 3600 1 -p test_001 -h key" << "\n";
-        // ss << "=====> 4. to change log level, should input : " << "3 loglevel" << "\n";
+        ss << "=====> 4. to change log level, should input : " << "3 loglevel" << "\n";
         return ss.str();
     }
 
@@ -203,7 +202,7 @@ namespace socketRedisSentinel {
             }
 
             // ======= begin main logic
-            MySentinel &cmd = MySentinel::instance();
+            Sentinel &cmd = Sentinel::instance();
             if (!cmd.init(ip, req.port)) {
                 LOG(Error, "init failed", ip, req.port);
                 stringstream ss;
@@ -279,7 +278,7 @@ namespace socketRedisSentinel {
             }
 
             // ======= begin main logic
-            MySentinel &cmd = MySentinel::instance();
+            Sentinel &cmd = Sentinel::instance();
             if (!cmd.init(ip, req.port)) {
                 LOG(Error, "init failed", ip, req.port);
                 stringstream ss;

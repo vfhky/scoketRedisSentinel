@@ -177,7 +177,7 @@ namespace socketRedisSentinel {
 
             stringstream ss;
             const char *fileNoPath = fileName(file);
-            ss << "[" << buf << ":" << tv.tv_usec << " us][" << fileNoPath << ":" << function << ":" \
+            ss << "[" << buf << ":" << tv.tv_usec << " us][" << fileNoPath << ":" \
                     << line << "][" << getpid() << "] ";
             if (lv <= Error) {
                 ss << " ***err*** ";
