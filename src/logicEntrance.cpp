@@ -215,13 +215,13 @@ namespace socketRedisSentinel {
             stringstream rspData;
             if (req.redisType & CLIENT_REQ_REDIS_TYPE_MASTER) {
                 list<RedisInfo> master = cmd.getMaster();
-                if (!req.poolName.empty()) {
+                if (req.poolName.empty()) {
                     rspData << LogicEntrance::makeRspData(CLIENT_REQ_REDIS_TYPE_MASTER, master);
                 }
             }
             if (req.redisType & CLIENT_REQ_REDIS_TYPE_SLVAVE) {
                 list<RedisInfo> slave = cmd.pharseSlave();
-                if (!req.poolName.empty()) {
+                if (req.poolName.empty()) {
                     rspData << LogicEntrance::makeRspData(CLIENT_REQ_REDIS_TYPE_SLVAVE, slave);
                 }
             }
