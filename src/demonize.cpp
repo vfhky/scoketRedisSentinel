@@ -61,6 +61,7 @@ void Demonize::initSrv(const LOG_LEVEL &sysLogLv, const LOG_TYPE &sysLogType) {
     }
     LOG(Info, "chdir to ", dir);
 
+    // to support console output , do not remove this depress.
     #if 0
         close(STDIN_FILENO);
         close(STDOUT_FILENO);
@@ -76,7 +77,7 @@ void Demonize::initSrv(const LOG_LEVEL &sysLogLv, const LOG_TYPE &sysLogType) {
 
     Config::instance().setLogLv(sysLogLv);
     Config::instance().setLogType(sysLogType);
-    LOG(Info, "server init success.", sysLogLv, sysLogType);
+    LOG(Info, "server exit ", sysLogLv, sysLogType);
 }
 
 

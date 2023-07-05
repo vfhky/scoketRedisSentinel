@@ -9,8 +9,8 @@ namespace socketRedisSentinel {
 
 
 
-    LOG_LEVEL Config::m_logLv   = Debug;
-    LOG_TYPE  Config::m_logType = LOG_TYPE_STDOUT;
+    LOG_LEVEL Config::m_logLv   = Info;
+    LOG_TYPE  Config::m_logType = LOG_TYPE_ALL;
 
 
 

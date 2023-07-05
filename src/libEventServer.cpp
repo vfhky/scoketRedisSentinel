@@ -112,7 +112,7 @@ namespace socketRedisSentinel {
         struct sockaddr_in sin;
         memset(&sin, 0, sizeof(sin));
         sin.sin_family = AF_INET;
-        sin.sin_port = htons(10086);
+        sin.sin_port = htons(LISTEN_PORT);
         sin.sin_addr.s_addr = htonl(INADDR_ANY);
 
 
@@ -123,6 +123,8 @@ namespace socketRedisSentinel {
             LOG(Error, "evconnlistener_new_bind failed", evutil_socket_error_to_string(EVUTIL_SOCKET_ERROR()));
             return -2;
         }
+
+        LOG(Info, "init server success", LISTEN_PORT);
 
         event_base_dispatch(base);
 

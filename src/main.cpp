@@ -12,7 +12,7 @@ int main(int argc, char * argv[])
 {
     int opt = 0;
     LOG_LEVEL sysLogLv = Debug;
-    LOG_TYPE sysLogType = LOG_TYPE_ALL;
+    LOG_TYPE sysLogType = LOG_TYPE_STDOUT;
 
     while ((opt = getopt(argc, argv, "hl:t:")) != -1) {
         switch (opt) {
@@ -49,6 +49,8 @@ int main(int argc, char * argv[])
         LOG(Error, "uknown exception", sysLogLv, sysLogType);
         exit(1);
     }
+
+    return 0;
 }
 
 

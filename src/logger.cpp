@@ -89,9 +89,8 @@ namespace socketRedisSentinel {
         strftime(buf, sizeof(buf), "%Y%m%d", t);
 
         sprintf(dirName, "%s/%s", LOG_DIR, buf);
-        if (0 !=Logger::mkdirP(dirName, S_IRWXU|S_IRWXG|S_IROTH)) {
-
-                std::cout << __FILE__ << ":" << __LINE__ << " exit " << strerror(errno) << std::endl;
+        if (0 != Logger::mkdirP(dirName, S_IRWXU|S_IRWXG|S_IROTH)) {
+            std::cout << __FILE__ << ":" << __LINE__ << " exit " << strerror(errno) << std::endl;
             return;
         }
 
@@ -113,7 +112,7 @@ namespace socketRedisSentinel {
 
         if (len > sizeof(_path)-1) {
             errno = ENAMETOOLONG;
-            std::cout << __FILE__ << ":" << __LINE__ << " exit " << strerror(errno)<< std::endl;
+            std::cout << __FILE__ << ":" << __LINE__ << " exit " << strerror(errno) << std::endl;
             return -1;
         }
         strcpy(_path, path);
@@ -124,9 +123,8 @@ namespace socketRedisSentinel {
                 if (mkdir(_path, mode) != 0) {
                     if (errno != EEXIST) {
                         std::cout << __FILE__ << ":" << __LINE__ << " exit " << strerror(errno) << std::endl;
-
                         return -1;
-                        }
+                    }
                 }
                 *p = '/';
             }
@@ -134,7 +132,7 @@ namespace socketRedisSentinel {
 
         if (mkdir(_path, mode) != 0) {
             if (errno != EEXIST) {
-                std::cout << __FILE__ << ":" << __LINE__ << " exit" << std::endl;
+                std::cout << __FILE__ << ":" << __LINE__ << " exit " << strerror(errno) << std::endl;
                 return -1;
             }
         }

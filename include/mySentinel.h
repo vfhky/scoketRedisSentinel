@@ -76,7 +76,10 @@ namespace socketRedisSentinel {
         */
         list<RedisInfo> getRedisByHash(const uint32_t &type, const string &hashStr);
 
-        uint32_t getHashIndexCrc32(const string &key, const int32_t &redisNum);
+
+
+        uint32_t redisComHash(const string& key, const int32_t &redisNums);
+        uint32_t redisCrc32Hash(const string &key, const int32_t &redisNum);
 
 
 
@@ -113,9 +116,6 @@ namespace socketRedisSentinel {
         map<string, string> parseRedisInfo(const string &redisInfo);
 
         string printListRedisInfo(const list<RedisInfo> &redisInfos);
-
-
-        uint32_t getHashIndex(const string& key, const int32_t &redisNums);
 
 
 

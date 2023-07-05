@@ -22,6 +22,8 @@ using namespace std;
 namespace socketRedisSentinel {
 
 
+    static const uint16_t LISTEN_PORT = 10086;
+
 
 
 

@@ -402,28 +402,6 @@ namespace socketRedisSentinel {
         return ss.str();
     }
 
-
-    uint32_t MySentinel::getHashIndex(const string& key, const int32_t &redisNums) {
-        if (0 >= redisNums) {
-            LOG(Error, "illegal param", key, redisNums);
-            return 0;
-        }
-
-        const char *keyPtr = key.c_str();
-        long hashIndex = 5381;
-        for (uint32_t index=0; index < key.length(); ++index) {
-            hashIndex = ((hashIndex << 5) + hashIndex) + keyPtr[index];
-            hashIndex = hashIndex & 0xFFFFFFFFl;
-        }
-
-        hashIndex = (int)hashIndex % redisNums;
-        if (hashIndex < 0) {
-            hashIndex = hashIndex * -1;
-        }
-
-        return hashIndex;
-    }
-
     /**
      * @param type 1-slave 2-master
     */
@@ -455,7 +433,29 @@ namespace socketRedisSentinel {
         return redisInfos;
     }
 
-    uint32_t MySentinel::getHashIndexCrc32(const string &key, const int32_t &redisNum) {
+
+    uint32_t MySentinel::redisComHash(const string& key, const int32_t &redisNums) {
+        if (0 >= redisNums) {
+            LOG(Error, "illegal param", key, redisNums);
+            return 0;
+        }
+
+        const char *keyPtr = key.c_str();
+        long hashIndex = 5381;
+        for (uint32_t index=0; index < key.length(); ++index) {
+            hashIndex = ((hashIndex << 5) + hashIndex) + keyPtr[index];
+            hashIndex = hashIndex & 0xFFFFFFFFl;
+        }
+
+        hashIndex = (int)hashIndex % redisNums;
+        if (hashIndex < 0) {
+            hashIndex = hashIndex * -1;
+        }
+
+        return hashIndex;
+    }
+
+    uint32_t MySentinel::redisCrc32Hash(const string &key, const int32_t &redisNum) {
         if (redisNum <= 0) {
             LOG(Error, "illegal param", key, redisNum);
             return 0;
