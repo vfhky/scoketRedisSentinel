@@ -31,14 +31,6 @@ namespace socketRedisSentinel {
     };
 
 
-    enum CLIENT_REQ_REDIS_TYPE {
-        CLIENT_REQ_REDIS_TYPE_ILLEGAL = 0x00,
-        CLIENT_REQ_REDIS_TYPE_MASTER = 0x01,
-        CLIENT_REQ_REDIS_TYPE_SLVAVE = 0x02,
-        CLIENT_REQ_REDIS_TYPE_ALL = 0x03,
-    };
-
-
 
     struct ClientReqInfo {
         /**

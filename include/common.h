@@ -90,6 +90,14 @@ enum LOG_TYPE {
 };
 
 
+enum CLIENT_REQ_REDIS_TYPE {
+	CLIENT_REQ_REDIS_TYPE_ILLEGAL = 0x00,
+	CLIENT_REQ_REDIS_TYPE_MASTER = 0x01,
+	CLIENT_REQ_REDIS_TYPE_SLVAVE = 0x02,
+	CLIENT_REQ_REDIS_TYPE_ALL = 0x03,
+};
+
+
 
 #if !defined(__foreach) && !defined(__const_iterator_def)
 #define __const_iterator_def(Iterator, Initializer) __typeof(Initializer) Iterator=(Initializer)
