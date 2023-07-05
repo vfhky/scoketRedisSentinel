@@ -19,8 +19,8 @@ int main(int argc, char * argv[])
             case 'h':
                 std::cout << "Usage: " << argv[0] << " [-h] [-l] [-t]" << std::endl;
                 std::cout << "  -h: display help message" << std::endl;
-                std::cout << "  -l: set the system log level , should be in 1-7." << std::endl;
-                std::cout << "  -t: set the log type , 1-just print on screen 2-write to file." << std::endl;
+                std::cout << "  -l: set the system log level , should be in 1-7(default 7)." << std::endl;
+                std::cout << "  -t: set the log type , 1-just print on screen(default) 2-write to file." << std::endl;
                 exit(0);
             case 'l':
                 sysLogLv = (LOG_LEVEL)Utils::stringToU32(optarg);

@@ -205,9 +205,9 @@ namespace socketRedisSentinel {
             // ======= begin main logic
             Sentinel &cmd = Sentinel::instance();
             if (!cmd.init(ip, req.port)) {
-                LOG(Error, "init failed", ip, req.port);
                 stringstream ss;
                 ss << "can not connect sentinel [" << ip << ":" << req.port << "]";
+                LOG(Error, "init failed", ss.str());
                 return ss.str();
             }
 
