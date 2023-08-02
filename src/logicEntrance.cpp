@@ -219,10 +219,10 @@ namespace socketRedisSentinel {
                     rspData << LogicEntrance::makeRspData(CLIENT_REQ_REDIS_TYPE_MASTER, master);
                 }
             }
-            if (req.redisType & CLIENT_REQ_REDIS_TYPE_SLVAVE) {
+            if (req.redisType & CLIENT_REQ_REDIS_TYPE_SLAVE) {
                 list<RedisInfo> slave = cmd.pharseSlave();
                 if (req.poolName.empty()) {
-                    rspData << LogicEntrance::makeRspData(CLIENT_REQ_REDIS_TYPE_SLVAVE, slave);
+                    rspData << LogicEntrance::makeRspData(CLIENT_REQ_REDIS_TYPE_SLAVE, slave);
                 }
             }
 
@@ -240,9 +240,9 @@ namespace socketRedisSentinel {
             }
 
             // slave redis infos
-            if (req.redisType & CLIENT_REQ_REDIS_TYPE_SLVAVE) {
-                list<RedisInfo> hashSlaveRedis = cmd.getRedisByType(CLIENT_REQ_REDIS_TYPE_SLVAVE, req.poolName);
-                rspData << LogicEntrance::makeRspData(CLIENT_REQ_REDIS_TYPE_SLVAVE, hashSlaveRedis);
+            if (req.redisType & CLIENT_REQ_REDIS_TYPE_SLAVE) {
+                list<RedisInfo> hashSlaveRedis = cmd.getRedisByType(CLIENT_REQ_REDIS_TYPE_SLAVE, req.poolName);
+                rspData << LogicEntrance::makeRspData(CLIENT_REQ_REDIS_TYPE_SLAVE, hashSlaveRedis);
             }
 
             LOG(Info, rspData.str());
@@ -299,9 +299,9 @@ namespace socketRedisSentinel {
             if (CLIENT_REQ_REDIS_TYPE_MASTER == req.redisType) {
                 cmd.getMaster();
                 redisList = cmd.getRedisByType(CLIENT_REQ_REDIS_TYPE_MASTER, req.poolName);
-            } else if (CLIENT_REQ_REDIS_TYPE_SLVAVE == req.redisType) {
+            } else if (CLIENT_REQ_REDIS_TYPE_SLAVE == req.redisType) {
                 cmd.pharseSlave();
-                redisList = cmd.getRedisByType(CLIENT_REQ_REDIS_TYPE_SLVAVE, req.poolName);
+                redisList = cmd.getRedisByType(CLIENT_REQ_REDIS_TYPE_SLAVE, req.poolName);
             } else {
                 rspData << "illegal req redisType=[" << req.redisType << "]";
                 LOG(Warn, "illegal req redisType", rspData.str(), req.dump());
