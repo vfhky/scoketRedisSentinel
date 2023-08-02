@@ -287,7 +287,7 @@ namespace socketRedisSentinel {
             if (!cmd.init(ip, req.port)) {
                 stringstream ss;
                 ss << "can not connect sentinel [" << ip << ":" << req.port << "]";
-                LOG(Error, "init failed", ip, req.port);
+                LOG(Error, "init failed", ip, req.port, ss.str());
                 return ss.str();
             }
 
@@ -295,52 +295,43 @@ namespace socketRedisSentinel {
             stringstream rspData;
 
             // master redis infos
-            if (req.redisType & CLIENT_REQ_REDIS_TYPE_MASTER) {
+            list<RedisInfo> redisList;
+            if (CLIENT_REQ_REDIS_TYPE_MASTER == req.redisType) {
                 cmd.getMaster();
-                list<RedisInfo> allMasterRedis = cmd.getRedisByType(CLIENT_REQ_REDIS_TYPE_MASTER, req.poolName);
-
-                if (allMasterRedis.empty()) {
-                    rspData << "# no master redis infos";
-                    LOG(Error, "no redis infos", req.dump());
-                } else {
-                    uint32_t hashIndex = cmd.redisComHash(req.hashKey, allMasterRedis.size());
-                    uint32_t index = 0;
-                    __foreach(it, allMasterRedis) {
-                        if (hashIndex == index) {
-                            const RedisInfo &info = *it;
-                            rspData << LogicEntrance::makeRspData(CLIENT_REQ_REDIS_TYPE_MASTER, info);
-                            break;
-                        }
-
-                        ++index;
-                    }
-                }
+                redisList = cmd.getRedisByType(CLIENT_REQ_REDIS_TYPE_MASTER, req.poolName);
+            } else if (CLIENT_REQ_REDIS_TYPE_SLVAVE == req.redisType) {
+                cmd.pharseSlave();
+                redisList = cmd.getRedisByType(CLIENT_REQ_REDIS_TYPE_SLVAVE, req.poolName);
+            } else {
+                rspData << "illegal req redisType=[" << req.redisType << "]";
+                LOG(Warn, "illegal req redisType", rspData.str(), req.dump());
+                return rspData.str();
             }
 
-            // slave redis infos
-            if (req.redisType & CLIENT_REQ_REDIS_TYPE_SLVAVE) {
-                list<RedisInfo> slave = cmd.pharseSlave();
-                list<RedisInfo> hashSlaveRedis = cmd.getRedisByType(CLIENT_REQ_REDIS_TYPE_SLVAVE, req.poolName);
-
-                if (hashSlaveRedis.empty()) {
-                    rspData << "# no master redis infos";
-                    LOG(Info, "no redis infos", req.dump());
-                } else {
-                    uint32_t hashIndex = cmd.redisCrc32Hash(req.hashKey, hashSlaveRedis.size());
-                    uint32_t index = 0;
-                    __foreach(it, hashSlaveRedis) {
-                        if (hashIndex == index) {
-                            const RedisInfo &info = *it;
-                            rspData << LogicEntrance::makeRspData(CLIENT_REQ_REDIS_TYPE_SLVAVE, info);
-                            break;
-                        }
-
-                        ++index;
-                    }
-                }
+            if (redisList.empty()) {
+                rspData << "# can not get redis infos";
+                LOG(Error, "can not get redis infos", rspData.str(), req.dump());
+                return rspData.str();
             }
 
-            LOG(Info, rspData.str());
+            uint32_t hashIndex = 0;
+            if (CLIENT_REQ_TYPE_REDIS_INFO_BY_COM_HASH == req.type) {
+                hashIndex = cmd.redisComHash(req.hashKey, redisList.size());
+            } else {
+                hashIndex = cmd.redisCrc32Hash(req.hashKey, redisList.size());
+            }
+
+            uint32_t index = 0;
+            __foreach(it, redisList) {
+                if (hashIndex == index) {
+                    rspData << LogicEntrance::makeRspData(req.redisType, *it);
+                    break;
+                }
+
+                ++index;
+            }
+
+            LOG(Info, req.type, req.redisType, hashIndex, redisList.size(), rspData.str());
             return rspData.str();
         } catch (const std::exception& e) {
             LOG(Error, "exception", req.dump(), e.what());

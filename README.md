@@ -10,7 +10,8 @@ ubuntu或者centos可以直接使用以下命令安装。安装后的库路径�
 root@typecodes:~# wget -c https://github.com/libevent/libevent/releases/download/release-2.1.12-stable/libevent-2.1.12-stable.tar.gz
 root@typecodes:~# tar -zxf libevent-2.1.12-stable.tar.gz
 root@typecodes:~# cd libevent-2.1.12-stable/
-root@typecodes:~# make -j4 && make install
+root@typecodes:~/libevent-2.1.12-stable# ./configure
+root@typecodes:~/libevent-2.1.12-stable# make -j4 && make install
 
 ## 安装后的路径
 root@typecodes:~/libevent-2.1.12-stable# ll /usr/local/lib
