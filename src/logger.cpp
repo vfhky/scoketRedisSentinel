@@ -1,4 +1,5 @@
 #include <limits.h>
+#include <sstream>
 #include <iostream>
 #include "logger.h"
 
@@ -15,7 +16,7 @@ namespace socketRedisSentinel {
 
 
 
-    FILE *Logger::openFile(char *fileName) {
+    FILE *Logger::openFile(const char *fileName) {
         FILE *fp;
         struct stat tStat;
         char logFile[LOG_FILE_NAME_LEN] = {0x00};
@@ -78,8 +79,6 @@ namespace socketRedisSentinel {
 
     void Logger::logToFile(const string &content) {
         FILE       *fp;
-        char       logFile[LOG_FILE_NAME_LEN] = {0x00};
-        char       dirName[LOG_FILE_NAME_LEN] = {0x00};
 
         struct timeval tv;
         ::gettimeofday(&tv,NULL);
@@ -88,14 +87,16 @@ namespace socketRedisSentinel {
         struct tm *t = ::localtime(&tv.tv_sec);
         strftime(buf, sizeof(buf), "%Y%m%d", t);
 
-        sprintf(dirName, "%s/%s", LOG_DIR, buf);
-        if (0 != Logger::mkdirP(dirName, S_IRWXU|S_IRWXG|S_IROTH)) {
+        stringstream dirName;
+        dirName << LOG_DIR << "/" << buf;
+        if (0 != Logger::mkdirP(dirName.str().c_str(), S_IRWXU|S_IRWXG|S_IROTH)) {
             std::cout << __FILE__ << ":" << __LINE__ << " exit " << strerror(errno) << std::endl;
             return;
         }
 
-        sprintf(logFile, "%s/%s%s", dirName, "trace.", buf);
-        if ((fp = Logger::openFile(logFile))== NULL) {
+        stringstream logFile;
+        logFile << dirName.str() << "/trace." << buf;
+        if ((fp = Logger::openFile(logFile.str().c_str()))== NULL) {
             return;
         }
 

@@ -24,7 +24,7 @@ namespace socketRedisSentinel {
 
 
     static const int LOG_FILE_NAME_LEN = 256;
-    static const char LOG_DIR[LOG_FILE_NAME_LEN] = "./log";
+    static const string LOG_DIR = "./log";
     static const int LOG_FILE_MAX_BYTES = 200 * 1024 * 1024;
 
 
@@ -34,7 +34,7 @@ namespace socketRedisSentinel {
     {
     public:
 
-        static FILE *openFile(char *fileName);
+        static FILE *openFile(const char *fileName);
         static int openDir(char *dirName);
         static void logToFile(const string &content);
         static int mkdirP(const char *path, mode_t mode);
