@@ -1,4 +1,5 @@
 #include "eventServer.h"
+#include "eventHttpServer.h"
 #include "logicEntrance.h"
 
 
@@ -102,6 +103,26 @@ namespace socketRedisSentinel {
         bufferevent_enable(bev, EV_READ | EV_PERSIST);
     }
 
+    struct evconnlistener * EventServer::createTcpServer(struct event_base *base) {
+        struct sockaddr_in sin;
+        memset(&sin, 0, sizeof(sin));
+        sin.sin_family = AF_INET;
+        sin.sin_port = htons(TCP_LISTEN_PORT);
+        sin.sin_addr.s_addr = htonl(INADDR_ANY);
+
+        struct evconnlistener *listener = evconnlistener_new_bind(base, listenerCb, NULL,
+                                                                LEV_OPT_CLOSE_ON_FREE | LEV_OPT_REUSEABLE, -1,
+                                                                (struct sockaddr *)&sin, sizeof(sin));
+        if (NULL == listener) {
+            LOG(Error, "evconnlistener_new_bind tcp server failed", evutil_socket_error_to_string(EVUTIL_SOCKET_ERROR()));
+            return NULL;
+        }
+
+        LOG(Info, "init tcp server success", TCP_LISTEN_PORT);
+        return listener;
+    }
+
+
     int EventServer::init() {
         struct event_base *base = event_base_new();
         if (NULL == base) {
@@ -109,28 +130,27 @@ namespace socketRedisSentinel {
             return -1;
         }
 
-        struct sockaddr_in sin;
-        memset(&sin, 0, sizeof(sin));
-        sin.sin_family = AF_INET;
-        sin.sin_port = htons(LISTEN_PORT);
-        sin.sin_addr.s_addr = htonl(INADDR_ANY);
-
-
-        struct evconnlistener *listener = evconnlistener_new_bind(base, listenerCb, NULL,
-                                                                LEV_OPT_CLOSE_ON_FREE | LEV_OPT_REUSEABLE, -1,
-                                                                (struct sockaddr *)&sin, sizeof(sin));
+        // create tcp server
+        struct evconnlistener *listener = this->createTcpServer(base);
         if (NULL == listener) {
-            LOG(Error, "evconnlistener_new_bind failed", evutil_socket_error_to_string(EVUTIL_SOCKET_ERROR()));
             return -2;
         }
 
-        LOG(Info, "init server success", LISTEN_PORT);
+        // create http server
+        struct evhttp *http = EventHttpServer::instance().createHttpServer(base);
+        if (NULL == http) {
+            return -3;
+        }
 
+        // run forever
         event_base_dispatch(base);
 
-
+        // clean up
         evconnlistener_free(listener);
+        evhttp_free(http);
         event_base_free(base);
+
+        LOG(Error, "something err occur", evutil_socket_error_to_string(EVUTIL_SOCKET_ERROR()));
         return 0;
     }
 

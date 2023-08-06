@@ -22,9 +22,6 @@ using namespace std;
 namespace socketRedisSentinel {
 
 
-    static const uint16_t LISTEN_PORT = 10086;
-
-
 
 
 
@@ -51,6 +48,8 @@ namespace socketRedisSentinel {
     private:
 
         static void trimCR(char *buf);
+
+        struct evconnlistener * createTcpServer(struct event_base *base);
 
 
 
