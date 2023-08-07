@@ -2,6 +2,21 @@
 tcp原生通信从redis的sentinel域名解析数据
 
 
+#### 一、介绍
+基于 Libevent 2.1.12 stable 和 OpenSSL 3.0 库开发。
+```
+root@typecodes:~# lsb_release -a
+No LSB modules are available.
+Distributor ID: Ubuntu
+Description:    Ubuntu 22.04.3 LTS
+Release:        22.04
+Codename:       jammy
+root@typecodes:~#
+root@typecodes:~# openssl version
+OpenSSL 3.0.2 15 Mar 2022 (Library: OpenSSL 3.0.2 15 Mar 2022)
+root@typecodes:~#
+```
+
 
 #### 二、安装 libevent
 ubuntu或者centos可以直接使用以下命令安装。安装后的库路径在`/usr/local/lib`。

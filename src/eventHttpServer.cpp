@@ -4,17 +4,14 @@
 
 
 /**
-// GET 方式请求： curl "http://172.29.74.59:8090?id=001&name=typecodes&phone=1111"
+ * GET ： curl "http://typecodes.com:8090?id=001&name=typecodes&phone=1111"
+ * POST post data：
+ * 1. curl  -X POST -d 'id=1111&name=typecodes&phone=1111'  http://typecodes.com:8090
+ * 2. curl -H "Content-Type: application/json" -X POST -d '{"id": "1111", "name":"typecodes", "phone":"1111"}'  http://typecodes.com:8090
+ * 3. data.json file： $ curl -H "Content-Type: application/json" -X POST -d @data.json  http://typecodes.com:8090
 
-// POST 提交数据的3种方式：
-// 原始字符串： curl  -X POST -d 'id=001&name=typecodes&phone=1111'  http://172.29.74.59:8090
-
-// 提交json数据： $ curl -H "Content-Type: application/json" -X POST -d '{"id": "001", "name":"typecodes", "phone":"1111"}'  http://172.29.74.59:8090
-
-// 直接提交data.json文件里面的json数据： $ curl -H "Content-Type: application/json" -X POST -d @data.json  http://172.29.74.59:8090
-
-
- * root@4d1ef2bcb408:~/testwork/testLibEvent# curl -XDELETE "http://172.29.74.59:8090?id=001&name=typecodes&phone=1111"
+ * request command not support will send 400 status code:
+ * root@4d1ef2bcb408:~/testwork/testLibEvent# curl -XDELETE "http://typecodes.com:8090?id=1111&name=typecodes&phone=1111"
     <HTML><HEAD>
     <TITLE>400 Bad Request</TITLE>
     </HEAD><BODY>
@@ -49,7 +46,7 @@ namespace socketRedisSentinel {
             return getParams;
         }
 
-        // 获取URL参数, 不能用 evhttp_parse_query_str(requestUri, &params);
+        // do not use evhttp_parse_query_str(requestUri, &params); for it will return key of "/?id"
         struct evkeyvalq params;
         evhttp_parse_query_str(evhttp_uri_get_query(uri), &params);
         for (struct evkeyval* header = params.tqh_first; header; header = header->next.tqe_next) {
@@ -57,8 +54,8 @@ namespace socketRedisSentinel {
         }
 
         /**
-         * get special param
-            const char* id = evhttp_find_header(&params, "id");
+         * get special param :
+         *   const char* id = evhttp_find_header(&params, "id");
         */
 
         evhttp_clear_headers(&params);
@@ -68,13 +65,13 @@ namespace socketRedisSentinel {
     }
 
 
-    // 处理GET请求
+    // handle get command
     void EventHttpServer::handleGetReq(struct evhttp_request *req, void *arg) {
 
 
         struct evbuffer *returnbuffer = evbuffer_new();
 
-        // 处理GET请求。 /?id=001&name=typecodes&phone=1111
+        // /?id=001&name=typecodes&phone=1111
         const char* requestUri = evhttp_request_get_uri(req);
         LOG(Info, requestUri);
 
@@ -105,7 +102,7 @@ namespace socketRedisSentinel {
         return postParams;
     }
 
-    // 处理POST请求
+    // handle post command
     void EventHttpServer::handlePostReq(struct evhttp_request *req, void *arg) {
         const char* requestUri = evhttp_request_get_uri(req);
         LOG(Info, requestUri);
@@ -173,7 +170,7 @@ namespace socketRedisSentinel {
         }
 
 
-        /* Create a new evhttp object to handle requests. */
+        // Create a new evhttp object to handle requests.
         struct evhttp *http = evhttp_new(base);
         if (!http) {
             LOG(Error, "evhttp_new failed", evutil_socket_error_to_string(EVUTIL_SOCKET_ERROR()));
