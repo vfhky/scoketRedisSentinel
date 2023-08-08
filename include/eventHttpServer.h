@@ -11,6 +11,7 @@
 #include <event2/util.h>
 #include <event2/event.h>
 #include <event2/keyvalq_struct.h>
+#include <sys/queue.h>
 
 
 
@@ -18,10 +19,44 @@
 
 
 
-using namespace std;
-
 namespace socketRedisSentinel {
 
+
+    struct HttpReqInfo {
+		// enum : evhttp_cmd_type
+        int32_t cmdType;
+
+        std::string requestUri;
+
+        std::string ip;
+
+        ev_uint16_t port;
+
+        std::map<std::string, std::string> headers;
+        std::map<std::string, std::string> body;
+
+
+        HttpReqInfo() {
+            cmdType = 0;
+            ip.clear();
+            port = 0;
+            headers.clear();
+            body.clear();
+        }
+
+        const std::string dump() const {
+            std::stringstream ss;
+            ss << "HttpReqInfo - {"
+                << "[cmdType:" << cmdType << "]"
+                << "[ip:" << ip << "]"
+                << "[port:" << port << "]"
+                << "[headers:" << Utils::printMap(headers) << "]"
+                << "[body:" << Utils::printMap(body) << "]"
+                << "}";
+
+            return ss.str();
+        }
+    };
 
 
 
@@ -42,10 +77,21 @@ namespace socketRedisSentinel {
 
     private:
 
-        static void handleGetReq(struct evhttp_request *req, void *arg);
-        static void handlePostReq(struct evhttp_request *req, void *arg);
+        static void handleGetReq(struct evhttp_request *req, HttpReqInfo &httpReqInfo, void *arg);
+        static void handlePostReq(struct evhttp_request *req, HttpReqInfo &httpReqInfo, void *arg);
 
-        static const void dumpHeaders(const struct evhttp_request *req);
+        static const void fillHttpReqInfo(struct evhttp_request *req, HttpReqInfo &httpReqInfo);
+        static const void fillHeaders(struct evhttp_request *req, HttpReqInfo &httpReqInfo);
+        static const void fillClientIpPort(struct evhttp_request *req, HttpReqInfo &httpReqInfo);
+        static const void fillCmdType(struct evhttp_request *req, HttpReqInfo &httpReqInfo);
+        static const void fillRequestUri(struct evhttp_request *req, HttpReqInfo &httpReqInfo);
+        static const bool fillGetParams(HttpReqInfo &httpReqInfo);
+        static const bool fillPostParams(struct evhttp_request *req, HttpReqInfo &httpReqInfo);
+        static const std::map<std::string, std::string> parseFormData(const std::string& postData);
+
+
+
+
         static const map<string, string> dumpGetParams(struct evhttp_request *req);
         static const map<string, string> dumpPostParams(struct evhttp_request *req);
 
