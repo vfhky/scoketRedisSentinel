@@ -21,19 +21,21 @@ namespace socketRedisSentinel {
         ss << "===> @param type :  1-get redis info.  2/3-get redis ip by common/crc32 hash  4-modify log type/lv." << "\n"
             << "===> @param ip  :  sentinel doamin or ip" << "\n"
             << "===> @param port  :  sentinel port" << "\n"
-            << "===> @param redisType  :  1-get slave redis info. 2-get master redis info 3-both 1 and 2" << "\n"
+            << "===> @param redisType  :  1-get master redis info. 2-get slave redis info 3-both 1 and 2" << "\n"
             << "===> @param -poolName  :  not must. when you want to assign special"
                     " redis poolName for the sentinelDomain." << "\n"
-            << "===> @param -hashKey  :  not must, used when type equals 2 to get target redis ip." << "\n";
+            << "===> @param -hashKey  :  not must, used when type equals 2 to get target redis ip." << "\n"
+            << "===> @param -logType  :  not must, used when type equals 3. enum: 1-console 2-log 3-both" << "\n"
+            << "===> @param -logLv  :  not must, used when type equals 3. enum: 1-7." << "\n";
 
         ss << "===> example : " << "\n";
         ss << "=====> 1. to get all slave redis info, should input : "
-            << "1 inner-sentinel.typecodes.com 3600 1" << "\n";
+            << "-type 1 -ip sentinel.typecodes.com -port 3600 -redisType 2" << "\n";
         ss << "=====> 2. to get special poolName for slave redis info, should input : "
-        << "1 inner-sentinel.typecodes.com 3600 2 test_001|test_002" << "\n";
+            << "-type 1 -ip sentinel.typecodes.com -port 3600 -redisType 2 -poolName test_001|test_002" << "\n";
         ss << "=====> 3. to get target master redis ip by common hash key: "
-        << "2 inner-sentinel.typecodes.com 3600 1 -p test_001 -h key" << "\n";
-        ss << "=====> 4. to change log level, should input : " << "3 loglevel" << "\n";
+            << "-type 2 -ip sentinel.typecodes.com -port 3600 -redisType 1 -poolName test_001 -hashKey key" << "\n";
+        ss << "=====> 4. to change log type and level, should input : " << "-type 3 -logLv 1" << "\n";
         return ss.str();
     }
 
