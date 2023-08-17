@@ -85,7 +85,11 @@ namespace socketRedisSentinel {
     void EventServer::listenerCb(struct evconnlistener *listener, evutil_socket_t fd,
                 struct sockaddr *address, int socklen, void *ctx)
     {
-        LOG(Debug, "accept client", fd);
+        char client_ip[INET6_ADDRSTRLEN];
+        struct sockaddr_in *addr = (struct sockaddr_in*)address;
+        const char *ip = evutil_inet_ntop(AF_INET, &(addr->sin_addr), client_ip, INET6_ADDRSTRLEN);
+        int port = ntohs(addr->sin_port);
+        LOG(Debug, "accept client", fd, ip, port);
 
         struct event_base *base = evconnlistener_get_base(listener);
         struct bufferevent *bev = bufferevent_socket_new(base, fd, BEV_OPT_CLOSE_ON_FREE);
