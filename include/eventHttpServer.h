@@ -95,6 +95,12 @@ namespace socketRedisSentinel {
         static const map<string, string> dumpGetParams(struct evhttp_request *req);
         static const map<string, string> dumpPostParams(struct evhttp_request *req);
 
+        // http response
+        static void doHttpRsp(struct evhttp_request *req, const std::string &rspData,
+                const int &rspCode, const std::string &rspReason);
+
+        static void httpRouter(struct evhttp *http);
+
 
 
 

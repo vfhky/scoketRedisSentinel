@@ -69,12 +69,9 @@ namespace socketRedisSentinel {
             return;
         }
 
-        struct evbuffer *returnbuffer = evbuffer_new();
-        evbuffer_add_printf(returnbuffer, "Received a GET request for %s\n", httpReqInfo.requestUri.c_str());
-        evhttp_send_reply(req, HTTP_OK, "OK", returnbuffer);
-        evbuffer_free(returnbuffer);
-
         LOG(Info, "end", httpReqInfo.dump());
+
+        EventHttpServer::doHttpRsp(req, httpReqInfo.requestUri, HTTP_OK, "OK");
     }
 
     const std::map<std::string, std::string> EventHttpServer::parseFormData(const std::string& postData) {
@@ -138,11 +135,19 @@ namespace socketRedisSentinel {
             return;
         }
 
-        struct evbuffer *returnbuffer = evbuffer_new();
+        LOG(Info, "end", httpReqInfo.dump());
 
-        evbuffer_add_printf(returnbuffer, "Received a POST request with data: %s\n", Utils::printMap(httpReqInfo.body).c_str());
-        evhttp_send_reply(req, HTTP_OK, "OK", returnbuffer);
+        EventHttpServer::doHttpRsp(req, Utils::printMap(httpReqInfo.body), HTTP_OK, "OK");
+    }
+
+
+    void EventHttpServer::doHttpRsp(struct evhttp_request *req, const std::string &rspData,
+                const int &rspCode, const std::string &rspReason) {
+        struct evbuffer *returnbuffer = evbuffer_new();
+        evbuffer_add_printf(returnbuffer, "%s\n", rspData.c_str());
+        evhttp_send_reply(req, rspCode, rspReason.c_str(), returnbuffer);
         evbuffer_free(returnbuffer);
+        LOG(Info, "response end", rspData, rspCode, rspReason);
     }
 
     const void EventHttpServer::fillHeaders(struct evhttp_request *req, HttpReqInfo &httpReqInfo) {
@@ -204,6 +209,17 @@ namespace socketRedisSentinel {
         }
     }
 
+    void EventHttpServer::httpRouter(struct evhttp *http) {
+        if (NULL != http) {
+            // default router
+            evhttp_set_gencb(http, EventHttpServer::httpReqEntrance, NULL);
+            //evhttp_set_cb(http, "/help", EventHttpServer::helpEntrance, NULL);
+            //evhttp_set_cb(http, "/sentinel", EventHttpServer::httpReqEntrance, NULL);
+
+            LOG(Info, "set http router success");
+        }
+    }
+
     struct evhttp * EventHttpServer::createHttpServer(struct event_base *base) {
         if (NULL == base) {
             LOG(Error, "createHttpServer failed due to NULL event_base", \
@@ -219,7 +235,7 @@ namespace socketRedisSentinel {
             return NULL;
         }
 
-        evhttp_set_gencb(http, EventHttpServer::httpReqEntrance, NULL);
+        EventHttpServer::httpRouter(http);
 
         struct evhttp_bound_socket *handle = evhttp_bind_socket_with_handle(http, SERVER_LISTEN_IP, HTTP_LISTEN_PORT);
         if (!handle) {
