@@ -20,10 +20,10 @@ namespace socketRedisSentinel {
         }
 
         if (0x0A == *(p + len - 1)) {
-            *(p + len - 1) = 0X00;
+            *(p + len - 1) = 0x00;
         }
         if (0x0D == *(p + len - 2)) {
-            *(p + len - 2) = 0X00;
+            *(p + len - 2) = 0x00;
         }
     }
 
