@@ -4,10 +4,10 @@
 
 
 
-#include "utils.h"
 #include <event2/event.h>
 #include <event2/listener.h>
 #include <event2/bufferevent.h>
+#include "clientReqInfo.h"
 
 
 
@@ -46,6 +46,8 @@ namespace socketRedisSentinel {
     private:
 
         static void trimCR(char *buf);
+
+        static ClientReqInfo pharseReq(const string &req);
 
 
 

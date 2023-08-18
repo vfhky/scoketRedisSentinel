@@ -6,6 +6,7 @@
 
 #include "tcpWrap.h"
 #include "utils.h"
+#include "clientReqInfo.h"
 
 
 using namespace std;

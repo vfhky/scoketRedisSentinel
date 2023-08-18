@@ -31,6 +31,89 @@ namespace socketRedisSentinel {
         }
     }
 
+    ClientReqInfo EventTcpServer::pharseReq(const string &req) {
+        ClientReqInfo reqInfo;
+        if (req.empty()) {
+            LOG(Info, reqInfo.dump());
+            return reqInfo;
+        }
+
+        /**
+         * 0-begin parse
+         * 1-get value
+         * 2-get flag
+        */
+        int32_t flag = 0;
+
+        int32_t length = req.size();
+        stringstream ss;
+        string key;
+        for (int32_t index = 0; index < length; index++) {
+            char c = (char)req[index];
+
+            // begin to parse a flag
+            if ('-' == c) {
+                if (0 == index || ' ' == (char)req[index-1]) {
+                    flag = 2;
+                    continue;
+                }
+            }
+
+            // settle when reach blank or come to the end char
+            if (' ' == c || index == length - 1) {
+                // reached end
+                if (index == length - 1) {
+                    ss << c;
+                }
+
+                // settle
+                if (1 == flag || index == length - 1) {
+                    string value = ss.str();
+                    std::transform(key.begin(), key.end(), key.begin(), ::tolower);
+                    if (key == "type") {
+                        reqInfo.type = static_cast<CLIENT_REQ_TYPE>(Utils::stringToU32(value));
+                    } else if (key == "ip") {
+                        reqInfo.ip = value;
+                    } else if (key == "port") {
+                        reqInfo.port = (uint16_t)Utils::stringToU32(value);
+                    } else if (key == "redistype") {
+                        reqInfo.redisType = static_cast<CLIENT_REQ_REDIS_TYPE>(Utils::stringToU32(value));
+                    } else if (key == "poolname") {
+                        reqInfo.poolName = value;
+                    } else if (key == "hashkey") {
+                        reqInfo.hashKey = value;
+                    } else if (key == "loglv") {
+                        reqInfo.logLv = Utils::stringToI64(value);
+                    } else if (key == "logtype") {
+                        reqInfo.logType = Utils::stringToI64(value);
+                    } else {
+                        //
+                    }
+
+                    key.clear();
+                    value.clear();
+                    ss.clear();
+                    ss.str("");
+                    flag = 0;
+                } else if (2 == flag) {
+                    key = ss.str();
+                    ss.clear();
+                    ss.str("");
+                    flag = 1;
+                } else {
+                }
+                continue;
+            }
+
+            if (0 != flag) {
+                ss << c;
+            }
+        }
+
+        LOG(Info, reqInfo.dump());
+        return reqInfo;
+    }
+
 
     void EventTcpServer::readCb(struct bufferevent *bev, void *ctx) {
         char buf[4096] = {0x00};
@@ -44,9 +127,10 @@ namespace socketRedisSentinel {
         EventTcpServer::trimCR(buf);
         LOG(Info, readSize, buf);
 
-        string rsp = LogicEntrance::instance().handleReq(buf);
+        ClientReqInfo clientReqInfo = EventTcpServer::pharseReq(buf);
+        string rsp = LogicEntrance::instance().handleReq(clientReqInfo);
         bufferevent_write(bev, rsp.c_str(), rsp.size());
-        LOG(Info, rsp);
+        LOG(Info, clientReqInfo.dump(), rsp);
     }
 
     void EventTcpServer::writeCb(struct bufferevent *bev, void *ctx) {
