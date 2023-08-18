@@ -5,14 +5,14 @@
 
 
 /**
- * GET ： curl "http://typecodes.com:8090?id=001&name=typecodes&phone=1111"
+ * GET ： $ curl "typecodes.com:10087?type=1&ip=sentinel.typecodes.com&port=20066&redisType=1&poolName=revenueGameTest_001&hashKey=1111"
  * POST post data：
- * 1. curl  -X POST -d 'id=1111&name=typecodes&phone=1111'  http://typecodes.com:8090
- * 2. curl -H "Content-Type: application/json" -X POST -d '{"id": "1111", "name":"typecodes", "phone":"1111"}'  http://typecodes.com:8090
- * 3. data.json file： $ curl -H "Content-Type: application/json" -X POST -d @data.json  http://typecodes.com:8090
+ * $ curl -X POST -d 'type=1&ip=sentinel.typecodes.com&port=20066&redisType=1&poolName=revenueGameTest_001&hashKey=1111' typecodes.com:10087
+ * $ curl -s -H "Content-Type: application/json" -X POST -d '{"type":1,"ip":"sentinel.typecodes.com","port":"20066","redisType":1,"poolName":"revenueGameTest_001","hashKey":"1111"}' typecodes.com:10087
+ * $ data.json file： $ curl -H "Content-Type: application/json" -X POST -d @data.json  http://typecodes.com:8090
 
  * request command not support will send 400 status code:
- * root@4d1ef2bcb408:~/testwork/testLibEvent# curl -XDELETE "http://typecodes.com:8090?id=1111&name=typecodes&phone=1111"
+ * root@4d1ef2bcb408:~/testwork/testLibEvent# curl -XDELETE "http://typecodes.com:8090?type=1&ip=typecodes&port=20066"
     <HTML><HEAD>
     <TITLE>400 Bad Request</TITLE>
     </HEAD><BODY>
@@ -101,13 +101,6 @@ namespace socketRedisSentinel {
             LOG(Info, "Bad Request", httpReqInfo.dump());
             return;
         }
-
-        ClientReqInfo clientReqInfo = EventHttpServer::httpBodyToClientReqInfo(httpReqInfo.body);
-        LOG(Info, httpReqInfo.dump(), clientReqInfo.dump());
-
-        string rsp = LogicEntrance::instance().handleReq(clientReqInfo);
-
-        EventHttpServer::doHttpRsp(req, rsp, HTTP_OK, "OK");
     }
 
     const std::map<std::string, std::string> EventHttpServer::parseFormData(const std::string& postData) {
@@ -170,13 +163,6 @@ namespace socketRedisSentinel {
             LOG(Info, "Bad Request", httpReqInfo.dump());
             return;
         }
-
-        ClientReqInfo clientReqInfo = EventHttpServer::httpBodyToClientReqInfo(httpReqInfo.body);
-        LOG(Info, httpReqInfo.dump(), clientReqInfo.dump());
-
-        string rsp = LogicEntrance::instance().handleReq(clientReqInfo);
-
-        EventHttpServer::doHttpRsp(req, rsp, HTTP_OK, "OK");
     }
 
     // make http response to client
@@ -223,6 +209,12 @@ namespace socketRedisSentinel {
         EventHttpServer::fillRequestUri(req, httpReqInfo);
     }
 
+    void EventHttpServer::handleSentinelUri(struct evhttp_request *req, const map<string, string> &httpBody) {
+        ClientReqInfo clientReqInfo = EventHttpServer::httpBodyToClientReqInfo(httpBody);
+        string rsp = LogicEntrance::instance().handleReq(clientReqInfo);
+        EventHttpServer::doHttpRsp(req, rsp, HTTP_OK, "OK");
+    }
+
     // http request handle entrance
     void EventHttpServer::httpReqEntrance(struct evhttp_request *req, void *arg) {
         HttpReqInfo httpReqInfo;
@@ -241,6 +233,14 @@ namespace socketRedisSentinel {
             default:
                 evhttp_send_error(req, HTTP_BADREQUEST, 0);
                 LOG(Warn, httpReqInfo.dump());
+                return;
+        }
+
+        // router
+        if (HTTP_URI_SENTINEL == httpReqInfo.requestUri) {
+            EventHttpServer::handleSentinelUri(req, httpReqInfo.body);
+        } else {
+            EventHttpServer::handleSentinelUri(req, httpReqInfo.body);
         }
     }
 

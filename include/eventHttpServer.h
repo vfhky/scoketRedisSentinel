@@ -110,6 +110,8 @@ namespace socketRedisSentinel {
                 const int &rspCode, const std::string &rspReason);
 
         static void httpRouter(struct evhttp *http);
+        static void handleSentinelUri(struct evhttp_request *req, const map<string, string> &httpBody);
+
 
 
 

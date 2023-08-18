@@ -76,8 +76,8 @@ namespace socketRedisSentinel {
         uint16_t port;
 
         /**
-         * 1-means get slave redis info.
-         * 2-means get master redis info
+         * 1-means get master redis info.
+         * 2-means get slave redis info
          * 3-means the result equal : 1 | 2
         */
         CLIENT_REQ_REDIS_TYPE redisType;
