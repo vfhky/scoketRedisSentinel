@@ -25,7 +25,7 @@ namespace socketRedisSentinel {
         static LogicEntrance& instance();
 
 
-        string handleReq(ClientReqInfo &reqInfo);
+        string handleReq(const ClientReqInfo &reqInfo);
 
 
 

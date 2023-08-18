@@ -40,7 +40,7 @@ namespace socketRedisSentinel {
     }
 
 
-    string LogicEntrance::handleReq(ClientReqInfo &reqInfo) {
+    string LogicEntrance::handleReq(const ClientReqInfo &reqInfo) {
         try {
             if (CLIENT_REQ_TYPE_ILLEGAL == reqInfo.type) {
                 LOG(Info, "illegal req param", reqInfo.dump());

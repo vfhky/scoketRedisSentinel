@@ -210,6 +210,70 @@ namespace socketRedisSentinel {
         return true;
     }
 
+    // remove first and last character from string
+    std::string Utils::removeFirstAndLastDoubleQuotes(const std::string& str) {
+        std::string strTmp = str;
+        if (!strTmp.empty() && strTmp[0] == '"') {
+            strTmp = strTmp.substr(1);
+        }
+        if (!strTmp.empty() && strTmp[strTmp.length() - 1] == '"') {
+            strTmp = strTmp.substr(0, strTmp.length() - 1);
+        }
+        return strTmp;
+    }
+
+    /**
+     * pharse very simple json to map other than import third library.
+     *
+     */
+    std::map<std::string, std::string> Utils::simpleJsonToMap(const std::string& json) {
+        std::map<std::string, std::string> jsonData;
+
+        size_t pos = 0;
+
+        int32_t maxRecycle = 100;
+        int32_t recycle = 1;
+
+        try {
+            while (recycle < maxRecycle && pos < json.length()) {
+                size_t keyStart = json.find('"', pos);
+                if (keyStart == std::string::npos)
+                    break;
+
+                size_t keyEnd = json.find('"', keyStart + 1);
+                if (keyEnd == std::string::npos)
+                    break;
+
+                std::string key = json.substr(keyStart + 1, keyEnd - keyStart - 1);
+
+                size_t valueStart = json.find(':', keyEnd);
+                if (valueStart == std::string::npos)
+                    break;
+
+                size_t valueEnd = json.find(',', valueStart);
+                if (valueEnd == std::string::npos)
+                    valueEnd = json.find('}', valueStart);
+
+                std::string value = json.substr(valueStart + 1, valueEnd - valueStart - 1);
+                value = Utils::removeFirstAndLastDoubleQuotes(value);
+
+                jsonData[key] = value;
+
+                pos = valueEnd + 1;
+
+                ++recycle;
+            }
+        } catch (const std::exception& e) {
+            jsonData.clear();
+            return jsonData;
+        } catch ( ... ) {
+            jsonData.clear();
+            return jsonData;
+        }
+
+        return jsonData;
+    }
+
 
 
 }

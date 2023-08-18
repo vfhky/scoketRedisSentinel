@@ -117,7 +117,7 @@ namespace socketRedisSentinel {
         if (contentType.find("application/x-www-form-urlencoded") != std::string::npos) {
             httpReqInfo.body = EventHttpServer::parseFormData(dataStream.str());
         } else if (contentType.find("application/json") != std::string::npos) {
-            //httpReqInfo.body = EventHttpServer::parseJsonData(dataStream.str());
+            httpReqInfo.body = Utils::simpleJsonToMap(dataStream.str());
         } else {
             LOG(Warn, "Unsupported Content-Type", contentType, httpReqInfo.dump());
             return false;
@@ -140,7 +140,7 @@ namespace socketRedisSentinel {
         EventHttpServer::doHttpRsp(req, Utils::printMap(httpReqInfo.body), HTTP_OK, "OK");
     }
 
-
+    // make http response to client
     void EventHttpServer::doHttpRsp(struct evhttp_request *req, const std::string &rspData,
                 const int &rspCode, const std::string &rspReason) {
         struct evbuffer *returnbuffer = evbuffer_new();
@@ -157,10 +157,6 @@ namespace socketRedisSentinel {
             httpReqInfo.headers[kv->key] = kv->value;
         }
 
-        // map<string, string> headersMap;
-        // for (struct evkeyval* header = headers->tqh_first; header; header = header->next.tqe_next) {
-        //     headersMap[header->key] = header->value;
-        // }
         evhttp_clear_headers(headers);
     }
 
