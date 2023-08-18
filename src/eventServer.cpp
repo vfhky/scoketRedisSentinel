@@ -126,6 +126,30 @@ namespace socketRedisSentinel {
         return listener;
     }
 
+    void EventServer::signalCb(evutil_socket_t sig, short event, void *arg) {
+        struct event_base *base = static_cast<event_base *>(arg);
+
+        switch(sig) {
+            case SIGHUP:
+                event_base_loopbreak(base);
+                LOG(Info, "Hangup signal catched.");
+                break;
+            case SIGTERM:
+                event_base_loopbreak(base);
+                LOG(Info, "Terminate signal catched.");
+                break;
+            case SIGUSR1:
+                Config::instance().setLogLv(Debug);
+                Config::instance().setLogType(LOG_TYPE_STDOUT);
+                LOG(Info, "reload config");
+                break;
+            default:
+                event_base_loopbreak(base);
+                LOG(Info, "recv sinal", sig);
+                break;
+        }
+    }
+
 
     int EventServer::init() {
         struct event_base *base = event_base_new();
@@ -145,6 +169,14 @@ namespace socketRedisSentinel {
         if (NULL == http) {
             return -3;
         }
+
+        // register signal callback
+        struct event *signalInt = evsignal_new(base, SIGINT, signalCb, base);
+        event_add(signalInt, NULL);
+        struct event *signalTerm = evsignal_new(base, SIGTERM, signalCb, base);
+        event_add(signalTerm, NULL);
+        struct event *signalHup = evsignal_new(base, SIGHUP, signalCb, base);
+        event_add(signalHup, NULL);
 
         // run forever
         event_base_dispatch(base);

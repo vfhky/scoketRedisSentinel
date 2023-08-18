@@ -9,7 +9,6 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <signal.h>
 #include <string.h>
 #include <fcntl.h>
 #include <errno.h>
@@ -32,7 +31,6 @@ namespace socketRedisSentinel {
 
 
     public:
-        static void signalHandler(int sig);
 
 
         static void initSrv(const LOG_LEVEL &sysLogLv, const LOG_TYPE &sysLogType);

@@ -51,6 +51,8 @@ namespace socketRedisSentinel {
 
         struct evconnlistener * createTcpServer(struct event_base *base);
 
+        static void signalCb(evutil_socket_t sig, short event, void *arg);
+
 
 
 

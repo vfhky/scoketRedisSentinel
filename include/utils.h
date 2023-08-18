@@ -19,6 +19,7 @@
 #include <map>
 #include <sstream>
 #include <stdexcept>
+#include <signal.h>
 
 #include "common.h"
 #include "logger.h"

@@ -48,6 +48,7 @@ namespace socketRedisSentinel {
             std::stringstream ss;
             ss << "HttpReqInfo - {"
                 << "[cmdType:" << cmdType << "]"
+                << "[requestUri:" << requestUri << "]"
                 << "[ip:" << ip << "]"
                 << "[port:" << port << "]"
                 << "[headers:" << Utils::printMap(headers) << "]"
@@ -57,6 +58,11 @@ namespace socketRedisSentinel {
             return ss.str();
         }
     };
+
+
+    // define http router uri
+    static const std::string HTTP_URI_HOME = "/";
+    static const std::string HTTP_URI_SENTINEL = "/sentinel";
 
 
 
