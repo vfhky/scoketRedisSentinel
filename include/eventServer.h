@@ -29,16 +29,6 @@ namespace socketRedisSentinel {
     {
     public:
 
-
-        static void readCb(struct bufferevent *bev, void *ctx);
-
-        static void writeCb(struct bufferevent *bev, void *ctx);
-
-        static void eventCb(struct bufferevent *bev, short event, void *ctx);
-
-        static void listenerCb(struct evconnlistener *listener, evutil_socket_t fd,
-                struct sockaddr *address, int socklen, void *ctx);
-
         int init();
 
 
@@ -47,11 +37,9 @@ namespace socketRedisSentinel {
 
     private:
 
-        static void trimCR(char *buf);
-
-        struct evconnlistener * createTcpServer(struct event_base *base);
 
         static void signalCb(evutil_socket_t sig, short event, void *arg);
+        static void registerSignalCb(struct event_base *base);
 
 
 
