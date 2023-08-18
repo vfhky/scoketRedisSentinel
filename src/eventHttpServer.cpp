@@ -1,4 +1,5 @@
 #include "eventHttpServer.h"
+#include "logicEntrance.h"
 
 
 
@@ -35,6 +36,38 @@ namespace socketRedisSentinel {
 
 
 
+
+    ClientReqInfo EventHttpServer::httpBodyToClientReqInfo(const std::map<std::string, std::string> &httpBody) {
+        ClientReqInfo clientReqInfo;
+
+        __foreach(it, httpBody) {
+            std::string key = it->first;
+            std::transform(key.begin(), key.end(), key.begin(), ::tolower);
+            const std::string &value = it->second;
+            if (key == "type") {
+                clientReqInfo.type = static_cast<CLIENT_REQ_TYPE>(Utils::stringToU32(value));
+            } else if (key == "ip") {
+                clientReqInfo.ip = value;
+            } else if (key == "port") {
+                clientReqInfo.port = (uint16_t)Utils::stringToU32(value);
+            } else if (key == "redistype") {
+                clientReqInfo.redisType = static_cast<CLIENT_REQ_REDIS_TYPE>(Utils::stringToU32(value));
+            } else if (key == "poolname") {
+                clientReqInfo.poolName = value;
+            } else if (key == "hashkey") {
+                clientReqInfo.hashKey = value;
+            } else if (key == "loglv") {
+                clientReqInfo.logLv = Utils::stringToI64(value);
+            } else if (key == "logtype") {
+                clientReqInfo.logType = Utils::stringToI64(value);
+            } else {
+                //
+            }
+        }
+        return clientReqInfo;
+    }
+
+
     const bool EventHttpServer::fillGetParams(HttpReqInfo &httpReqInfo) {
         // /?id=001&name=typecodes&phone=1111
         struct evhttp_uri* uri = evhttp_uri_parse(httpReqInfo.requestUri.c_str());
@@ -69,9 +102,12 @@ namespace socketRedisSentinel {
             return;
         }
 
-        LOG(Info, "end", httpReqInfo.dump());
+        ClientReqInfo clientReqInfo = EventHttpServer::httpBodyToClientReqInfo(httpReqInfo.body);
+        LOG(Info, httpReqInfo.dump(), clientReqInfo.dump());
 
-        EventHttpServer::doHttpRsp(req, httpReqInfo.requestUri, HTTP_OK, "OK");
+        string rsp = LogicEntrance::instance().handleReq(clientReqInfo);
+
+        EventHttpServer::doHttpRsp(req, rsp, HTTP_OK, "OK");
     }
 
     const std::map<std::string, std::string> EventHttpServer::parseFormData(const std::string& postData) {
@@ -135,9 +171,12 @@ namespace socketRedisSentinel {
             return;
         }
 
-        LOG(Info, "end", httpReqInfo.dump());
+        ClientReqInfo clientReqInfo = EventHttpServer::httpBodyToClientReqInfo(httpReqInfo.body);
+        LOG(Info, httpReqInfo.dump(), clientReqInfo.dump());
 
-        EventHttpServer::doHttpRsp(req, Utils::printMap(httpReqInfo.body), HTTP_OK, "OK");
+        string rsp = LogicEntrance::instance().handleReq(clientReqInfo);
+
+        EventHttpServer::doHttpRsp(req, rsp, HTTP_OK, "OK");
     }
 
     // make http response to client

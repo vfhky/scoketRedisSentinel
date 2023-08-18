@@ -16,6 +16,9 @@
 
 
 #include "utils.h"
+#include "clientReqInfo.h"
+
+
 
 
 
@@ -94,6 +97,7 @@ namespace socketRedisSentinel {
         static const bool fillGetParams(HttpReqInfo &httpReqInfo);
         static const bool fillPostParams(struct evhttp_request *req, HttpReqInfo &httpReqInfo);
         static const std::map<std::string, std::string> parseFormData(const std::string& postData);
+        static ClientReqInfo httpBodyToClientReqInfo(const std::map<std::string, std::string> &httpBody);
 
 
 
