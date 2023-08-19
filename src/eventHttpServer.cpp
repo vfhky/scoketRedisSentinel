@@ -101,6 +101,8 @@ namespace socketRedisSentinel {
             LOG(Info, "Bad Request", httpReqInfo.dump());
             return;
         }
+
+        LOG(Info, "fill param end", httpReqInfo.dump());
     }
 
     const std::map<std::string, std::string> EventHttpServer::parseFormData(const std::string& postData) {
@@ -163,6 +165,8 @@ namespace socketRedisSentinel {
             LOG(Info, "Bad Request", httpReqInfo.dump());
             return;
         }
+
+        LOG(Info, "fill param end", httpReqInfo.dump());
     }
 
     // make http response to client
@@ -190,8 +194,8 @@ namespace socketRedisSentinel {
         char * clientIP = NULL;
         ev_uint16_t clientPort = 0;
         evhttp_connection_get_peer(conn, &clientIP, &clientPort);
-        httpReqInfo.ip = clientIP;
-        httpReqInfo.port = clientPort;
+        httpReqInfo.peerIp = clientIP;
+        httpReqInfo.peerPort = clientPort;
     }
 
     const void EventHttpServer::fillCmdType(struct evhttp_request *req, HttpReqInfo &httpReqInfo) {
@@ -200,6 +204,20 @@ namespace socketRedisSentinel {
 
     const void EventHttpServer::fillRequestUri(struct evhttp_request *req, HttpReqInfo &httpReqInfo) {
         httpReqInfo.requestUri = evhttp_request_get_uri(req);
+
+        struct evhttp_uri* httpUri = evhttp_uri_parse(httpReqInfo.requestUri.c_str());
+        if (NULL != httpUri) {
+            const char *uriPath = evhttp_uri_get_path(httpUri);
+            httpReqInfo.uriPath = (NULL != uriPath) ? uriPath : "";
+
+            const char *uriHost = evhttp_uri_get_host(httpUri);
+            httpReqInfo.uriHost = (NULL != uriHost) ? uriHost : "";
+
+            httpReqInfo.uriPort = evhttp_uri_get_port(httpUri);
+
+            const char *userInfo = evhttp_uri_get_userinfo(httpUri);
+            httpReqInfo.userInfo = (NULL != userInfo) ? userInfo : "";
+        }
     }
 
     const void EventHttpServer::fillHttpReqInfo(struct evhttp_request *req, HttpReqInfo &httpReqInfo) {
@@ -220,9 +238,6 @@ namespace socketRedisSentinel {
         HttpReqInfo httpReqInfo;
         EventHttpServer::fillHttpReqInfo(req, httpReqInfo);
 
-
-        LOG(Info, httpReqInfo.dump());
-
         switch (httpReqInfo.cmdType) {
             case EVHTTP_REQ_GET:
                 EventHttpServer::handleGetReq(req, httpReqInfo, arg);
@@ -232,14 +247,16 @@ namespace socketRedisSentinel {
                 break;
             default:
                 evhttp_send_error(req, HTTP_BADREQUEST, 0);
-                LOG(Warn, httpReqInfo.dump());
+                LOG(Warn, "not supported req type.", httpReqInfo.dump());
                 return;
         }
 
         // router
-        if (HTTP_URI_SENTINEL == httpReqInfo.requestUri) {
+        if (HTTP_URI_SENTINEL == httpReqInfo.uriPath) {
+            LOG(Info, "find router.", HTTP_URI_SENTINEL);
             EventHttpServer::handleSentinelUri(req, httpReqInfo.body);
         } else {
+            LOG(Info, "not find router , redirect to sentinel help");
             EventHttpServer::handleSentinelUri(req, httpReqInfo.body);
         }
     }

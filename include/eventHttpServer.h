@@ -31,9 +31,16 @@ namespace socketRedisSentinel {
 
         std::string requestUri;
 
-        std::string ip;
+        std::string uriPath;
 
-        ev_uint16_t port;
+        std::string uriHost;
+
+        int32_t uriPort;
+
+        std::string userInfo;
+
+        std::string peerIp;
+        ev_uint16_t peerPort;
 
         std::map<std::string, std::string> headers;
         std::map<std::string, std::string> body;
@@ -41,8 +48,13 @@ namespace socketRedisSentinel {
 
         HttpReqInfo() {
             cmdType = 0;
-            ip.clear();
-            port = 0;
+            requestUri.clear();
+            uriPath.clear();
+            uriHost.clear();
+            uriPort = -9999;
+            userInfo.clear();
+            peerIp.clear();
+            peerPort = 0;
             headers.clear();
             body.clear();
         }
@@ -52,8 +64,12 @@ namespace socketRedisSentinel {
             ss << "HttpReqInfo - {"
                 << "[cmdType:" << cmdType << "]"
                 << "[requestUri:" << requestUri << "]"
-                << "[ip:" << ip << "]"
-                << "[port:" << port << "]"
+                << "[uriPath:" << uriPath << "]"
+                << "[uriHost:" << uriHost << "]"
+                << "[uriPort:" << uriPort << "]"
+                << "[userInfo:" << userInfo << "]"
+                << "[peerIp:" << peerIp << "]"
+                << "[peerPort:" << peerPort << "]"
                 << "[headers:" << Utils::printMap(headers) << "]"
                 << "[body:" << Utils::printMap(body) << "]"
                 << "}";

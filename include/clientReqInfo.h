@@ -73,7 +73,7 @@ namespace socketRedisSentinel {
         /**
         * port of sentinel
         */
-        uint16_t port;
+        int16_t port;
 
         /**
          * 1-means get master redis info.

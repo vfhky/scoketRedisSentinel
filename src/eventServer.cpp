@@ -44,6 +44,9 @@ namespace socketRedisSentinel {
 
 
     int EventServer::init() {
+        const string libEventVer = event_get_version();
+        LOG(Debug, "using libEvent.", libEventVer);
+
         struct event_base *base = event_base_new();
         if (NULL == base) {
             LOG(Error, "event_base_new failed", evutil_socket_error_to_string(EVUTIL_SOCKET_ERROR()));
