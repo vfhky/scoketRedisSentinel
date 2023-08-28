@@ -1,5 +1,6 @@
 #include "eventServer.h"
 #include "eventHttpServer.h"
+#include "eventHttpsServer.h"
 #include "eventTcpServer.h"
 
 
@@ -65,6 +66,12 @@ namespace socketRedisSentinel {
             return -3;
         }
 
+        // create https server
+        struct evhttp *https = EventHttpsServer::instance().createHttpsServer(base);
+        if (NULL == http) {
+            return -4;
+        }
+
         // register signal callback
         EventServer::registerSignalCb(base);
 
@@ -74,10 +81,11 @@ namespace socketRedisSentinel {
         // clean up
         evconnlistener_free(listener);
         evhttp_free(http);
+        evhttp_free(https);
         event_base_free(base);
 
         LOG(Error, "something err occur", evutil_socket_error_to_string(EVUTIL_SOCKET_ERROR()));
-        exit(-4);
+        return -5;
     }
 
 

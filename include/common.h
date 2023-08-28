@@ -110,6 +110,7 @@ enum LOG_TYPE {
 #define SERVER_LISTEN_IP "0.0.0.0"
 static const uint16_t TCP_LISTEN_PORT = 10086;
 static const uint16_t HTTP_LISTEN_PORT = 10087;
+static const uint16_t HTTPS_LISTEN_PORT = 10088;
 
 
 

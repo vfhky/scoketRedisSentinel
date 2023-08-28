@@ -94,7 +94,7 @@ CFLAGS     	+= $(if $(GEN_DYN_LIB), $(addprefix -fPIC -I ,$(sort $(dir $(SRC_H))
 CXXFLAGS   	= $(CFLAGS) -D_SOCKET_TIMEOUT_POLL
 LDFLAGS    	:=
 LD_LIB_DIR 	:= #-L $(PRG_LIB_DIR)
-LD_LIBS	   	:= -lz -levent #-lprintnolog
+LD_LIBS	   	:= -lz -levent -levent_openssl -lssl -lcrypto #-lprintnolog
 XLD_FLG	   	:= -Xlinker "-(" $(LDFLAGS) -Xlinker "-)"
 
 # Add vpath.
