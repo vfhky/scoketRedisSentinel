@@ -88,3 +88,29 @@ flag during linking and do at least one of the following:
    - use the '-Wl,-rpath -Wl,LIBDIR' linker flag
    - have your system administrator add LIBDIR to '/etc/ld.so.conf'
 ```
+
+#### 三、OpenSSL 命令生成证书
+使用openssl命令即可生成服务器签名证书。如下所示，当然还可以追加参数`-days 365`来设置有效期，另外也可以去掉`-subj`参数改动手工输入。
+```
+vfhky@typecodes:~/bin/sentinel$ openssl req -newkey rsa:1024 -keyout server.key -out server.crt -nodes -subj "/C=CN/ST=GD/L=SZ/O=YY/OU=IT/CN=yy.com"
+Generating a 1024 bit RSA private key
+......................++++++
+.++++++
+writing new private key to 'server.key'
+-----
+vfhky@typecodes:~/bin/sentinel$
+```
+
+其中，`-subj`里面的具体参数说明：
+```
+Country Name (2 letter code)	:  The two-letter country code where your company is legally located.
+State or Province Name (full name)	:  The state/province where your company is legally located.
+Locality Name (e.g., city)	:  The city where your company is legally located.
+Organization Name (e.g., company)	:  Your company's legally registered name (e.g., YourCompany, Inc.).
+Organizational Unit Name (e.g., section)	:  The name of your department within the organization. (You can leave this option blank; simply press Enter.)
+Common Name (e.g., server FQDN)	:  The fully-qualified domain name (FQDN) (e.g., www.example.com).
+Email Address	:  Your email address. (You can leave this option blank; simply press Enter.)
+A challenge password	:  Leave this option blank (simply press Enter).
+An optional company name	:  Leave this option blank (simply press Enter).
+```
+

@@ -68,7 +68,7 @@ namespace socketRedisSentinel {
 
         // create https server
         struct evhttp *https = EventHttpsServer::instance().createHttpsServer(base);
-        if (NULL == http) {
+        if (NULL == https) {
             return -4;
         }
 
