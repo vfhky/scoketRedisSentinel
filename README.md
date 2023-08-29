@@ -90,12 +90,21 @@ flag during linking and do at least one of the following:
 ```
 
 #### 三、OpenSSL 命令生成证书
-使用openssl命令即可生成服务器签名证书。如下所示，当然还可以追加参数`-days 365`来设置有效期，另外也可以去掉`-subj`参数改动手工输入。
+如下所示，使用openssl命令即可生成服务器签名证书。当然还可以追加参数`-days 365`来设置有效期，另外也可以去掉`-subj`参数改动手工输入。
 ```
 vfhky@typecodes:~/bin/sentinel$ openssl req -newkey rsa:1024 -keyout server.key -out server.crt -nodes -subj "/C=CN/ST=GD/L=SZ/O=YY/OU=IT/CN=yy.com"
 Generating a 1024 bit RSA private key
 ......................++++++
 .++++++
+writing new private key to 'server.key'
+-----
+vfhky@typecodes:~/bin/sentinel$
+
+## 也可以生成X509格式的证书
+vfhky@typecodes:~/bin/sentinel$ openssl req -x509 -newkey rsa:1024 -keyout server.key -out server.crt -nodes -subj "/C=CN/ST=GD/L=SZ/O=YY/OU=IT/CN=yy.com"
+Generating a 1024 bit RSA private key
+................................++++++
+.........................................................................................++++++
 writing new private key to 'server.key'
 -----
 vfhky@typecodes:~/bin/sentinel$
