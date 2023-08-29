@@ -196,11 +196,11 @@ namespace socketRedisSentinel {
 
     const void HttpComHandle::fillClientIpPort(struct evhttp_request *req, HttpReqInfo &httpReqInfo) {
         struct evhttp_connection* conn = evhttp_request_get_connection(req);
-        char *clientIP = NULL;
-        ev_uint16_t clientPort = 0;
-        evhttp_connection_get_peer(conn, &clientIP, &clientPort);
-        httpReqInfo.peerIp = clientIP;
-        httpReqInfo.peerPort = clientPort;
+        char * peerIp = NULL;
+        ev_uint16_t peerPort = 0;
+        evhttp_connection_get_peer(conn, &peerIp, &peerPort);
+        httpReqInfo.peerIp = peerIp;
+        httpReqInfo.peerPort = peerPort;
     }
 
     const void HttpComHandle::fillCmdType(struct evhttp_request *req, HttpReqInfo &httpReqInfo) {
