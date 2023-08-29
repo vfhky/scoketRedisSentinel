@@ -36,7 +36,9 @@ namespace socketRedisSentinel {
 
 
 
-
+    /**
+     * convert http req data to inner data struct
+     */
     ClientReqInfo HttpComHandle::httpBodyToClientReqInfo(const std::map<std::string, std::string> &httpBody) {
         ClientReqInfo clientReqInfo;
 
@@ -89,6 +91,9 @@ namespace socketRedisSentinel {
          *   const char* id = evhttp_find_header(&params, "id");
         */
 
+        if (NULL != uri) {
+            evhttp_uri_free(uri);
+        }
         evhttp_clear_headers(&params);
         return true;
     }
@@ -191,7 +196,7 @@ namespace socketRedisSentinel {
 
     const void HttpComHandle::fillClientIpPort(struct evhttp_request *req, HttpReqInfo &httpReqInfo) {
         struct evhttp_connection* conn = evhttp_request_get_connection(req);
-        char * clientIP = NULL;
+        char *clientIP = NULL;
         ev_uint16_t clientPort = 0;
         evhttp_connection_get_peer(conn, &clientIP, &clientPort);
         httpReqInfo.peerIp = clientIP;
@@ -221,6 +226,7 @@ namespace socketRedisSentinel {
     }
 
     const void HttpComHandle::fillHttpReqInfo(struct evhttp_request *req, HttpReqInfo &httpReqInfo) {
+        httpReqInfo.clear();
         HttpComHandle::fillClientIpPort(req, httpReqInfo);
         HttpComHandle::fillCmdType(req, httpReqInfo);
         HttpComHandle::fillHeaders(req, httpReqInfo);

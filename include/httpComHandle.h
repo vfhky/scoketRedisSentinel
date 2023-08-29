@@ -59,6 +59,19 @@ namespace socketRedisSentinel {
             body.clear();
         }
 
+        void clear() {
+            cmdType = 0;
+            requestUri.clear();
+            uriPath.clear();
+            uriHost.clear();
+            uriPort = -9999;
+            userInfo.clear();
+            peerIp.clear();
+            peerPort = 0;
+            headers.clear();
+            body.clear();
+        }
+
         const std::string dump() const {
             std::stringstream ss;
             ss << "HttpReqInfo - {"
