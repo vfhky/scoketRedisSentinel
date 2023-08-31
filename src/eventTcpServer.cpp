@@ -186,7 +186,7 @@ namespace socketRedisSentinel {
             return;
         }
 
-
+        // callback
         bufferevent_data_cb rCb = EventTcpServer::readCb;
         bufferevent_data_cb wCb = NULL;
         bufferevent_event_cb eventCb = EventTcpServer::eventCb;
