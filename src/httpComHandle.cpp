@@ -181,7 +181,7 @@ namespace socketRedisSentinel {
         evbuffer_add_printf(returnbuffer, "%s\n", rspData.c_str());
         evhttp_send_reply(req, rspCode, rspReason.c_str(), returnbuffer);
         evbuffer_free(returnbuffer);
-        LOG(Info, "response end", rspData, rspCode, rspReason);
+        LOG(Info, "response end", rspCode, rspReason, rspData);
     }
 
     const void HttpComHandle::fillHeaders(struct evhttp_request *req, HttpReqInfo &httpReqInfo) {

@@ -66,7 +66,7 @@ namespace socketRedisSentinel {
             return -3;
         }
 
-#if 0
+#ifdef _START_HTTPS_SERVER
         // create https server
         struct evhttp *https = EventHttpsServer::instance().createHttpsServer(base);
         if (NULL == https) {
@@ -81,12 +81,20 @@ namespace socketRedisSentinel {
         event_base_dispatch(base);
 
         // clean up
-        evconnlistener_free(listener);
-        evhttp_free(http);
-#if 0
-        evhttp_free(https);
+        if (NULL != listener) {
+            evconnlistener_free(listener);
+        }
+        if (NULL != http) {
+            evhttp_free(http);
+        }
+#ifdef _START_HTTPS_SERVER
+        if (NULL != https) {
+            evhttp_free(https);
+        }
 #endif
-        event_base_free(base);
+        if (NULL != base) {
+            event_base_free(base);
+        }
 
         LOG(Error, "something err occur", evutil_socket_error_to_string(EVUTIL_SOCKET_ERROR()));
         return -5;

@@ -84,6 +84,7 @@ namespace socketRedisSentinel {
         std::string data = "";
 
         char *buffer = new char[SOCKET_DATA_BATCH_SIZE];
+        size_t readSize = 0;
         while (NULL != input) {
             memset(buffer, 0x00, sizeof(buffer));
             size_t len = evbuffer_remove(input, buffer, SOCKET_DATA_BATCH_SIZE - 1);
@@ -92,6 +93,7 @@ namespace socketRedisSentinel {
             }
             // buffer[len] = '\0';
             data += buffer;
+            readSize += len;
         }
         delete []buffer;
 
@@ -104,7 +106,7 @@ namespace socketRedisSentinel {
             event_base_loopexit(base, NULL);
         }
 
-        LOG(Debug, "readCb ok", ctx, m_rcvData);
+        LOG(Debug, "readCb ok", ctx, readSize, m_rcvData);
     }
 
     // callback function when data was send to server.
@@ -139,7 +141,7 @@ namespace socketRedisSentinel {
         bufferevent_data_cb rCb = EventTcpClient::readCb;
         bufferevent_data_cb wCb = EventTcpClient::writeCb;;
         bufferevent_event_cb eventCb = EventTcpClient::eventCb;
-        bufferevent_setcb(bev, rCb, wCb, eventCb, NULL);
+        bufferevent_setcb(bev, rCb, wCb, eventCb, base);
         bufferevent_enable(bev, EV_READ | EV_WRITE | EV_PERSIST);
 
         // total request timeout callback
