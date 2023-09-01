@@ -121,24 +121,18 @@ namespace socketRedisSentinel {
             }
 
             // ======= begin main logic
-            Sentinel &cmd = Sentinel::instance();
-            if (!cmd.init(ip, req.port)) {
-                stringstream ss;
-                ss << "can not connect sentinel [" << ip << ":" << req.port << "]";
-                LOG(Error, "init failed", ss.str());
-                return ss.str();
-            }
+            Sentinel *cmd = new Sentinel(ip, req.port);
 
             // set to memory
             stringstream rspData;
             if (req.redisType & CLIENT_REQ_REDIS_TYPE_MASTER) {
-                list<RedisInfo> master = cmd.getMaster();
+                list<RedisInfo> master = cmd->getMaster();
                 if (req.poolName.empty()) {
                     rspData << LogicEntrance::makeRspData(CLIENT_REQ_REDIS_TYPE_MASTER, master);
                 }
             }
             if (req.redisType & CLIENT_REQ_REDIS_TYPE_SLAVE) {
-                list<RedisInfo> slave = cmd.pharseSlave();
+                list<RedisInfo> slave = cmd->pharseSlave();
                 if (req.poolName.empty()) {
                     rspData << LogicEntrance::makeRspData(CLIENT_REQ_REDIS_TYPE_SLAVE, slave);
                 }
@@ -153,16 +147,17 @@ namespace socketRedisSentinel {
             rspData.str("");
             // master redis infos
             if (req.redisType & CLIENT_REQ_REDIS_TYPE_MASTER) {
-                list<RedisInfo> allMasterRedis = cmd.getRedisByType(CLIENT_REQ_REDIS_TYPE_MASTER, req.poolName);
+                list<RedisInfo> allMasterRedis = cmd->getRedisByType(CLIENT_REQ_REDIS_TYPE_MASTER, req.poolName);
                 rspData << LogicEntrance::makeRspData(CLIENT_REQ_REDIS_TYPE_MASTER, allMasterRedis);
             }
 
             // slave redis infos
             if (req.redisType & CLIENT_REQ_REDIS_TYPE_SLAVE) {
-                list<RedisInfo> hashSlaveRedis = cmd.getRedisByType(CLIENT_REQ_REDIS_TYPE_SLAVE, req.poolName);
+                list<RedisInfo> hashSlaveRedis = cmd->getRedisByType(CLIENT_REQ_REDIS_TYPE_SLAVE, req.poolName);
                 rspData << LogicEntrance::makeRspData(CLIENT_REQ_REDIS_TYPE_SLAVE, hashSlaveRedis);
             }
 
+            delete cmd;
             LOG(Info, rspData.str());
             return rspData.str();
         } catch (const std::exception& e) {
@@ -201,13 +196,7 @@ namespace socketRedisSentinel {
             }
 
             // ======= begin main logic
-            Sentinel &cmd = Sentinel::instance();
-            if (!cmd.init(ip, req.port)) {
-                stringstream ss;
-                ss << "can not connect sentinel [" << ip << ":" << req.port << "]";
-                LOG(Error, "init failed", ip, req.port, ss.str());
-                return ss.str();
-            }
+            Sentinel *cmd = new Sentinel(ip, req.port);
 
             // set to memory
             stringstream rspData;
@@ -215,11 +204,11 @@ namespace socketRedisSentinel {
             // master redis infos
             list<RedisInfo> redisList;
             if (CLIENT_REQ_REDIS_TYPE_MASTER == req.redisType) {
-                cmd.getMaster();
-                redisList = cmd.getRedisByType(CLIENT_REQ_REDIS_TYPE_MASTER, req.poolName);
+                cmd->getMaster();
+                redisList = cmd->getRedisByType(CLIENT_REQ_REDIS_TYPE_MASTER, req.poolName);
             } else if (CLIENT_REQ_REDIS_TYPE_SLAVE == req.redisType) {
-                cmd.pharseSlave();
-                redisList = cmd.getRedisByType(CLIENT_REQ_REDIS_TYPE_SLAVE, req.poolName);
+                cmd->pharseSlave();
+                redisList = cmd->getRedisByType(CLIENT_REQ_REDIS_TYPE_SLAVE, req.poolName);
             } else {
                 rspData << "illegal req redisType=[" << req.redisType << "]";
                 LOG(Warn, "illegal req redisType", rspData.str(), req.dump());
@@ -234,9 +223,9 @@ namespace socketRedisSentinel {
 
             uint32_t hashIndex = 0;
             if (CLIENT_REQ_TYPE_REDIS_INFO_BY_COM_HASH == req.type) {
-                hashIndex = cmd.redisComHash(req.hashKey, redisList.size());
+                hashIndex = cmd->redisComHash(req.hashKey, redisList.size());
             } else {
-                hashIndex = cmd.redisCrc32Hash(req.hashKey, redisList.size());
+                hashIndex = cmd->redisCrc32Hash(req.hashKey, redisList.size());
             }
 
             uint32_t index = 0;
@@ -249,6 +238,7 @@ namespace socketRedisSentinel {
                 ++index;
             }
 
+            delete cmd;
             LOG(Info, req.type, req.redisType, hashIndex, redisList.size(), rspData.str());
             return rspData.str();
         } catch (const std::exception& e) {

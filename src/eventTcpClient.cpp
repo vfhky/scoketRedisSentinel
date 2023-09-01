@@ -6,37 +6,47 @@
 
 namespace socketRedisSentinel {
 
+
+    // tcp recieved data.
+    std::string EventTcpClient::m_rcvData = "";
+
     void EventTcpClient::setTcpNoDelay(evutil_socket_t fd) {
         int one = 1;
-        setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &one, sizeof(one));
+        int ret = setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &one, sizeof(one));
+        LOG(Debug, "setTcpNoDelay done", fd, ret);
     }
 
     void EventTcpClient::eventCb(struct bufferevent *bev, short event, void *ctx) {
         evutil_socket_t fd = bufferevent_getfd(bev);
         int i_errCode = EVUTIL_SOCKET_ERROR();
-        LOG(Debug, fd, i_errCode, evutil_socket_error_to_string(i_errCode) );
+        LOG(Debug, fd, i_errCode, event, evutil_socket_error_to_string(i_errCode) );
 
+        bool bLoopExit = true;
         if(event & BEV_EVENT_TIMEOUT) {
-            EventTcpClient::setTcpNoDelay(fd);
-            LOG(Debug, "timeout reached");
+            LOG(Debug, "eventCb timeout reached");
         } else if (event & BEV_EVENT_CONNECTED) {
-            LOG(Debug, "connection success");
+            EventTcpClient::setTcpNoDelay(fd);
+            bLoopExit = false;
+            LOG(Debug, "eventCb connection success");
         } else if (event & BEV_EVENT_EOF) {
-            LOG(Debug, "connection closed");
+            LOG(Debug, "eventCb connection closed");
         } else if (event & BEV_EVENT_ERROR) {
-            LOG(Error, "some other error");
+            LOG(Error, "eventCb some other error");
         } else if(event & BEV_EVENT_READING) {
-            LOG(Debug, "read data is ready");
+            bLoopExit = false;
+            LOG(Debug, "eventCb read data is ready");
         } else if(event & BEV_EVENT_WRITING ) {
-            LOG(Debug, "write data is ready");
+            bLoopExit = false;
+            LOG(Debug, "eventCb write data is ready");
         } else {
-            LOG(Debug, "unkown event callback", event);
+            LOG(Debug, "eventCb unkown event callback", event);
         }
 
         // break loop
-        if (NULL != ctx) {
+        if (bLoopExit && NULL != ctx) {
             event_base* base = static_cast<event_base*>(ctx);
             event_base_loopexit(base, NULL);
+            LOG(Debug, "eventCb event_base_loopexit");
         }
     }
 
@@ -45,55 +55,61 @@ namespace socketRedisSentinel {
         bufferevent *bev = static_cast<bufferevent *>(arg);
 
         // send data to server
-        string reqData = "test";
+        std::string reqData = "test";
         if (0 != bufferevent_write(bev, reqData.c_str(), reqData.size())) {
             LOG(Error, "send data to server fail", reqData);
         }
     }
 
 
-    bool EventTcpClient::sendData(struct bufferevent* bev, const string &reqData) {
-        if (reqData.empty()) {
-            LOG(Info, reqData);
+    bool EventTcpClient::sendData(struct bufferevent* bev, const std::string &data) {
+        if (data.empty()) {
+            LOG(Info, data);
             return true;
         }
 
+        string reqData = data + "\n";
         if (0 == bufferevent_write(bev, reqData.c_str(), reqData.size())) {
-            LOG(Debug, "sendData ok", reqData);
+            LOG(Debug, "bufferevent_write ok , wait callback", reqData);
             return true;
         }
 
-        LOG(Error, "bufferevent_write fail", reqData);
+        LOG(Error, "bufferevent_write fail", reqData, evutil_socket_error_to_string(EVUTIL_SOCKET_ERROR()));
         return false;
     }
 
+    // callback function when recieved data from server.
     void EventTcpClient::readCb(struct bufferevent* bev, void* ctx) {
         struct evbuffer* input = bufferevent_get_input(bev);
         std::string data = "";
 
-        char buffer[20] = {0x00};
-        while (true) {
-            size_t len = evbuffer_remove(input, buffer, sizeof(buffer) - 1);
+        char *buffer = new char[SOCKET_DATA_BATCH_SIZE];
+        while (NULL != input) {
+            memset(buffer, 0x00, sizeof(buffer));
+            size_t len = evbuffer_remove(input, buffer, SOCKET_DATA_BATCH_SIZE - 1);
             if (len <= 0) {
                 break;
             }
-            buffer[len] = '\0';
+            // buffer[len] = '\0';
             data += buffer;
         }
+        delete []buffer;
 
+        // set the recieved data to memeber.
         m_rcvData = data;
-        LOG(Debug, "Received ok", m_rcvData);
-    }
 
-    void EventTcpClient::writeCb(struct bufferevent *bev, void *ctx) {
-        char buf[4096] = {0x00};
-        size_t readSize = bufferevent_read(bev, buf, sizeof(buf));
-        if (readSize < 0) {
-            LOG(Error, "bufferevent_read failed", buf, evutil_socket_error_to_string(EVUTIL_SOCKET_ERROR()));
-            exit(1);
+        // break loop
+        if (NULL != ctx) {
+            event_base* base = static_cast<event_base*>(ctx);
+            event_base_loopexit(base, NULL);
         }
 
-        LOG(Info, readSize, buf);
+        LOG(Debug, "readCb ok", ctx, m_rcvData);
+    }
+
+    // callback function when data was send to server.
+    void EventTcpClient::writeCb(struct bufferevent *bev, void *ctx) {
+        LOG(Info, "writeCb done");
     }
 
     void EventTcpClient::reqTimeoutCb(evutil_socket_t fd, short event, void* arg) {
@@ -108,10 +124,12 @@ namespace socketRedisSentinel {
     }
 
 
-    bool EventTcpClient::doRequest(const std::string &ip, u_short port, const string &reqData, int16_t timeoutMics, string &rcvData) {
+    bool EventTcpClient::doRequest(const std::string &ip, u_short port, const std::string &reqData,
+            int16_t timeoutMics, std::string &rcvData) {
         event_base* base = event_base_new();
         if (NULL == base) {
-            LOG(Error, "event_base_new fail", ip, port, timeoutMics, evutil_socket_error_to_string(EVUTIL_SOCKET_ERROR()), reqData);
+            LOG(Error, "event_base_new fail", ip, port, timeoutMics, \
+                evutil_socket_error_to_string(EVUTIL_SOCKET_ERROR()), reqData);
             return false;
         }
 
@@ -119,10 +137,10 @@ namespace socketRedisSentinel {
 
         // callback
         bufferevent_data_cb rCb = EventTcpClient::readCb;
-        bufferevent_data_cb wCb = EventTcpClient::writeCb;
+        bufferevent_data_cb wCb = EventTcpClient::writeCb;;
         bufferevent_event_cb eventCb = EventTcpClient::eventCb;
         bufferevent_setcb(bev, rCb, wCb, eventCb, NULL);
-        bufferevent_enable(bev, EV_READ | EV_PERSIST | EV_WRITE);
+        bufferevent_enable(bev, EV_READ | EV_WRITE | EV_PERSIST);
 
         // total request timeout callback
         struct event* reqTimeoutEvent = evtimer_new(base, reqTimeoutCb, base);
@@ -135,11 +153,13 @@ namespace socketRedisSentinel {
         sockaddr_in serverAddr;
         serverAddr.sin_family = AF_INET;
         serverAddr.sin_port = htons(port);
+        // Convert IPv4 and IPv6 addresses from text to binary
         inet_pton(AF_INET, ip.c_str(), &(serverAddr.sin_addr));
         if (bufferevent_socket_connect(bev, (sockaddr*)&serverAddr, sizeof(serverAddr)) < 0) {
             LOG(Error, "bufferevent_socket_connect fail", ip, port, evutil_socket_error_to_string(EVUTIL_SOCKET_ERROR()), reqData);
             bufferevent_free(bev);
             event_free(reqTimeoutEvent);
+            event_base_free(base);
             return false;
         }
 
@@ -154,6 +174,7 @@ namespace socketRedisSentinel {
             LOG(Error, "sendData fail", ip, port, evutil_socket_error_to_string(EVUTIL_SOCKET_ERROR()), reqData);
             bufferevent_free(bev);
             event_free(reqTimeoutEvent);
+            event_base_free(base);
             return false;
         }
 
@@ -161,9 +182,15 @@ namespace socketRedisSentinel {
         event_base_dispatch(base);
 
         // release source
-        bufferevent_free(bev);
-        event_free(reqTimeoutEvent);
-        // event_base_free(base);
+        if (NULL != bev) {
+            bufferevent_free(bev);
+        }
+        if (NULL != reqTimeoutEvent) {
+            event_free(reqTimeoutEvent);
+        }
+        if (NULL != base) {
+            event_base_free(base);
+        }
 
         // return recieved data
         rcvData = m_rcvData;

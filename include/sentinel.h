@@ -9,15 +9,15 @@
 #include "clientReqInfo.h"
 
 
-using namespace std;
+
 
 namespace socketRedisSentinel {
 
     struct RedisInfo {
         // eg. testCache_001
-        string name;
-        string ip;
-        string port;
+        std::string name;
+        std::string ip;
+        std::string port;
 
         bool bMeet() {
             if (!name.empty() && !ip.empty() && !port.empty()) {
@@ -28,8 +28,8 @@ namespace socketRedisSentinel {
         }
 
 
-        const string dump() const {
-            stringstream ss;
+        const std::string dump() const {
+            std::stringstream ss;
             ss << "RedisInfo - {"
                 << "[name:" << name << "]"
                 << "[ip:" << ip << "]"
@@ -45,29 +45,22 @@ namespace socketRedisSentinel {
     {
     public:
 
-        static Sentinel& instance();
+        Sentinel(const std::string &ip, const uint16_t &port);
 
 
-        ~Sentinel();
-
-
-
-        bool init(const string &ip, uint16_t port);
-
-
-        string getRedisInfo();
+        std::string getRedisInfo();
 
 
         // 解析所有的master ip:port
-        list<RedisInfo> getMaster();
+        std::list<RedisInfo> getMaster();
 
 
 
         // 根据masterName获取所有的从库
-        string getSlaveByMasterName(const string &masterName);
+        std::string getSlaveByMasterName(const std::string &masterName);
 
         // 解析所有的从库到内存
-        list<RedisInfo> pharseSlave();
+        std::list<RedisInfo> pharseSlave();
 
 
         /**
@@ -75,24 +68,19 @@ namespace socketRedisSentinel {
          * @param hashStr format：hash_001|hash_0002|....
          * @return master or slave redis infos
         */
-        list<RedisInfo> getRedisByType(const uint32_t &type, const string &hashStr);
+        std::list<RedisInfo> getRedisByType(const uint32_t &type, const std::string &hashStr);
 
 
 
-        uint32_t redisComHash(const string& key, const int32_t &redisNums);
-        uint32_t redisCrc32Hash(const string &key, const int32_t &redisNum);
+        uint32_t redisComHash(const std::string& key, const int32_t &redisNums);
+        uint32_t redisCrc32Hash(const std::string &key, const int32_t &redisNum);
 
 
 
-
-        void close();
-
-
-
-        map<string/*hash*/, map<uint32_t, RedisInfo> > getSlaveRedis();
-        void setSlaveRedis(const map<string/*hash*/, map<uint32_t, RedisInfo> > &info);
-        map<string/*hash*/, map<uint32_t, RedisInfo> > getMasterRedis();
-        void setMasterRedis(const map<string/*hash*/, map<uint32_t, RedisInfo> > &info);
+        std::map<std::string/*hash*/, std::map<uint32_t, RedisInfo> > getSlaveRedis();
+        void setSlaveRedis(const std::map<std::string/*hash*/, std::map<uint32_t, RedisInfo> > &info);
+        std::map<std::string/*hash*/, std::map<uint32_t, RedisInfo> > getMasterRedis();
+        void setMasterRedis(const std::map<std::string/*hash*/, std::map<uint32_t, RedisInfo> > &info);
 
 
 
@@ -111,20 +99,23 @@ namespace socketRedisSentinel {
          * $11
          * 10.25.70.78
          */
-        list<map<string, string> > parseSlaveInfo(const string &slavesInfo);
+        std::list<std::map<std::string, std::string> > parseSlaveInfo(const std::string &slavesInfo);
 
         // 解析 info 命令返回的数据
-        map<string, string> parseRedisInfo(const string &redisInfo);
+        std::map<std::string, std::string> parseRedisInfo(const std::string &redisInfo);
 
-        string printListRedisInfo(const list<RedisInfo> &redisInfos);
+        std::string printListRedisInfo(const std::list<RedisInfo> &redisInfos);
 
 
 
     private:
-        TcpWrap m_socket;
 
-        map<string/*hash*/, map<uint32_t, RedisInfo> > m_slaveRedis;
-        map<string/*hash*/, map<uint32_t, RedisInfo> > m_masterRedis;
+        // ip and port of the tcp server.
+        std::string m_srvIp;
+        uint16_t m_srvPort;
+
+        std::map<std::string/*hash*/, std::map<uint32_t, RedisInfo> > m_slaveRedis;
+        std::map<std::string/*hash*/, std::map<uint32_t, RedisInfo> > m_masterRedis;
 
 
 

@@ -1,4 +1,5 @@
 #include "sentinel.h"
+#include "eventTcpClient.h"
 
 
 
@@ -7,61 +8,38 @@
 namespace socketRedisSentinel {
 
 
-
-    Sentinel& Sentinel::instance() {
-        static Sentinel instance;
-        return instance;
-    }
-
-
-
-    Sentinel::~Sentinel() {
-        if( m_socket.getClientFd() ) {
-            m_socket.close();
-        }
+    Sentinel::Sentinel(const std::string &ip, const uint16_t &port) {
+        m_srvIp = ip;
+        m_srvPort = port;
     }
 
 
 
 
-    bool Sentinel::init(const string &ip, uint16_t port) {
-        if(!m_socket.connect(ip, port)) {
-            LOG(Error, "connect sentinel failed", ip, port);
-            return false;
-        }
-
-        LOG(Debug, "connect sentinel ok", ip, port);
-        return true;
-    }
-
-
-    string Sentinel::getRedisInfo() {
-        string message = "info";
-        if(!m_socket.send(message)) {
-            LOG(Error, "send mgs failed", message);
-            return "";
-        }
-
+    std::string Sentinel::getRedisInfo() {
+        std::string message = "info";
         // receive message
-        string redisInfo;
-        if(!m_socket.recv(redisInfo)) {
-            LOG(Error, "recv mgs failed", redisInfo);
+        EventTcpClient *client = new EventTcpClient();
+        std::string redisInfo;
+        if(!client->doRequest(m_srvIp, m_srvPort, message, 3000, redisInfo)) {
+            LOG(Error, "doRequest mgs failed", m_srvIp, m_srvPort, redisInfo);
             return "";
         }
 
+        delete client;
         return redisInfo;
     }
 
 
     // 解析所有的master ip:port
-    list<RedisInfo> Sentinel::getMaster() {
-        list<RedisInfo> masterList;
-        string redisInfo = this->getRedisInfo();
+    std::list<RedisInfo> Sentinel::getMaster() {
+        std::list<RedisInfo> masterList;
+        std::string redisInfo = this->getRedisInfo();
         if (redisInfo.empty()) {
             return masterList;
         }
 
-        map<string, string> mapInfo = this->parseRedisInfo(redisInfo);
+        std::map<std::string, std::string> mapInfo = this->parseRedisInfo(redisInfo);
 
         // 解析master数量
         uint32_t masterNums = 0;
@@ -70,7 +48,7 @@ namespace socketRedisSentinel {
         }
 
         for (uint32_t index=0; index<masterNums; index++) {
-            string key = "master" + Utils::toString(index);
+            std::string key = "master" + Utils::toString(index);
 
             // master0:name=testCache_001,status=ok,address=10.26.11.239:4038,slaves=1,sentinels=3
             if (mapInfo.find(key) == mapInfo.end()) {
@@ -80,17 +58,17 @@ namespace socketRedisSentinel {
             }
 
             // IP:PORT
-            vector<string> vect = Utils::splitStr(mapInfo[key], ",");
+            std::vector<std::string> vect = Utils::splitStr(mapInfo[key], ",");
             RedisInfo redisInfo;
             __foreach(it, vect) {
-                vector<string> vect2 = Utils::splitStr(*it, "=");
+                std::vector<std::string> vect2 = Utils::splitStr(*it, "=");
                 if (2 == vect2.size()) {
                     if ("name" == vect2[0]) {
                         redisInfo.name = vect2[1];
                     }
                     if ("address" == vect2[0]) {
-                        const string &address = vect2[1];
-                        vector<string> vect3 = Utils::splitStr(address, ":");
+                        const std::string &address = vect2[1];
+                        std::vector<std::string> vect3 = Utils::splitStr(address, ":");
                         if (2 == vect3.size()) {
                             redisInfo.ip = vect3[0];
                             redisInfo.port = vect3[1];
@@ -110,8 +88,8 @@ namespace socketRedisSentinel {
             masterList.clear();
         }
 
-        // convert to map and set into memory.
-        map<string/*hash*/, map<uint32_t, RedisInfo> > allMasterInfo;
+        // convert to std::map and set into memory.
+        std::map<std::string/*hash*/, std::map<uint32_t, RedisInfo> > allMasterInfo;
         __foreach(it, masterList) {
             if (allMasterInfo.find(it->name) != allMasterInfo.end()) {
                 uint32_t index = allMasterInfo[it->name].size() + 1;
@@ -129,35 +107,33 @@ namespace socketRedisSentinel {
 
 
     // 根据masterName获取所有的从库
-    string Sentinel::getSlaveByMasterName(const string &masterName) {
-        const string message = string("sentinel slaves " ) + masterName;
-        if (!m_socket.send(message)) {
-            LOG(Error, "send mgs failed", message);
-            return "";
-        }
+    std::string Sentinel::getSlaveByMasterName(const std::string &masterName) {
+        const std::string message = std::string("sentinel slaves " ) + masterName;
 
         // receive message
-        string slavesInfo;
-        if (!m_socket.recv(slavesInfo)) {
-            LOG(Error, "recv mgs failed", slavesInfo);
+        EventTcpClient *client = new EventTcpClient();
+        std::string slavesInfo;
+        if(!client->doRequest(m_srvIp, m_srvPort, message, 3000, slavesInfo)) {
+            LOG(Error, "doRequest mgs failed", slavesInfo);
             return "";
         }
 
+        delete client;
         return slavesInfo;
     }
 
     // 获取所有的从库
-    list<RedisInfo> Sentinel::pharseSlave() {
-        list<RedisInfo> slaveList;
+    std::list<RedisInfo> Sentinel::pharseSlave() {
+        std::list<RedisInfo> slaveList;
 
-        list<RedisInfo> masterList = this->getMaster();
+        std::list<RedisInfo> masterList = this->getMaster();
         __foreach(it, masterList) {
-            const string &masterName = it->name;
+            const std::string &masterName = it->name;
 
-            string slavesInfo = this->getSlaveByMasterName(masterName);
-            list<map<string, string> > listInfo = this->parseSlaveInfo(slavesInfo);
+            std::string slavesInfo = this->getSlaveByMasterName(masterName);
+            std::list<std::map<std::string, std::string> > listInfo = this->parseSlaveInfo(slavesInfo);
             __foreach(it2, listInfo) {
-                const map<string, string> &singleSlave = *it2;
+                const std::map<std::string, std::string> &singleSlave = *it2;
                 if (singleSlave.find("flags") == singleSlave.end() || singleSlave.at("flags") != "slave") {
                     LOG(Error, "illgeal slave", Utils::printMap(singleSlave));
                     break;
@@ -167,8 +143,8 @@ namespace socketRedisSentinel {
 
                 // ip:port
                 if (singleSlave.find("name")!= singleSlave.end()) {
-                    const string &address = singleSlave.at("name");
-                    vector<string> vect1 = Utils::splitStr(address, ":");
+                    const std::string &address = singleSlave.at("name");
+                    std::vector<std::string> vect1 = Utils::splitStr(address, ":");
                     LOG(Debug, masterName, Utils::printList(vect1));
                     if (2 == vect1.size()) {
                         redisInfo.name = masterName;
@@ -177,12 +153,12 @@ namespace socketRedisSentinel {
                     }
                 }
 
-                string ip;
+                std::string ip;
                 if (singleSlave.find("ip") != singleSlave.end()) {
                     ip = singleSlave.at("ip");
                 }
 
-                string port;
+                std::string port;
                 if (singleSlave.find("port") != singleSlave.end()) {
                     port = singleSlave.at("port");
                 }
@@ -198,8 +174,8 @@ namespace socketRedisSentinel {
             }
         }
 
-        // convert to map and set into memory.
-        map<string/*hash*/, map<uint32_t, RedisInfo> > allSlaveInfo;
+        // convert to std::map and set into memory.
+        std::map<std::string/*hash*/, std::map<uint32_t, RedisInfo> > allSlaveInfo;
         __foreach(it, slaveList) {
             if (allSlaveInfo.find(it->name) != allSlaveInfo.end()) {
                 uint32_t index = allSlaveInfo[it->name].size() + 1;
@@ -212,16 +188,6 @@ namespace socketRedisSentinel {
 
         LOG(Info, masterList.size(), this->printListRedisInfo(slaveList));
         return slaveList;
-    }
-
-
-
-
-    void Sentinel::close() {
-        LOG(Debug, m_socket.getClientFd());
-        if (m_socket.getClientFd()) {
-            m_socket.close();
-        }
     }
 
 
@@ -240,8 +206,8 @@ namespace socketRedisSentinel {
      * $11
      * 10.25.70.78
      */
-    list<map<string, string> > Sentinel::parseSlaveInfo(const string &slavesInfo) {
-        list<map<string, string> > slaveList;
+    std::list<std::map<std::string, std::string> > Sentinel::parseSlaveInfo(const std::string &slavesInfo) {
+        std::list<std::map<std::string, std::string> > slaveList;
         if (slavesInfo.empty()) {
             return slaveList;
         }
@@ -250,9 +216,9 @@ namespace socketRedisSentinel {
 
         uint32_t slaveNums = 0;
 
-        map<string, string> singleSlave;
-        string key;
-        string value;
+        std::map<std::string, std::string> singleSlave;
+        std::string key;
+        std::string value;
 
         // -1-初始 0-获取slave数量 1-解析新的一组slave的变量数量 2-key的长度 3-key的值 3-value的长度 4-value的值
         int flag = -1;
@@ -342,10 +308,10 @@ namespace socketRedisSentinel {
     }
 
     // 解析 info 命令返回的数据
-    map<string, string> Sentinel::parseRedisInfo(const string &redisInfo) {
+    std::map<std::string, std::string> Sentinel::parseRedisInfo(const std::string &redisInfo) {
         stringstream key;
 
-        map<string, string> map;
+        std::map<std::string, std::string> map;
         for(size_t index = 0; index < (redisInfo.size()); index++) {
             char c = redisInfo[index];
 
@@ -368,9 +334,9 @@ namespace socketRedisSentinel {
                 }
 
                 // 找到第1个:作为key
-                string keyStr = key.str();
-                string::size_type pos = keyStr.find(":");
-                if(pos!= string::npos) {
+                std::string keyStr = key.str();
+                std::string::size_type pos = keyStr.find(":");
+                if(pos!= std::string::npos) {
                     map[keyStr.substr(0, pos)] = keyStr.substr(pos + 1);
                 }
 
@@ -386,7 +352,7 @@ namespace socketRedisSentinel {
     }
 
 
-    string Sentinel::printListRedisInfo(const list<RedisInfo> &redisInfos) {
+    std::string Sentinel::printListRedisInfo(const std::list<RedisInfo> &redisInfos) {
         stringstream ss;
         ss << "[size:" << redisInfos.size();
         __foreach(it, redisInfos) {
@@ -405,11 +371,11 @@ namespace socketRedisSentinel {
     /**
      * @param type 1-master 2-slave
     */
-    list<RedisInfo> Sentinel::getRedisByType(const uint32_t &type, const string &hashStr) {
-        map<string/*hash*/, map<uint32_t, RedisInfo> > allRedis = (CLIENT_REQ_REDIS_TYPE_MASTER == type) \
+    std::list<RedisInfo> Sentinel::getRedisByType(const uint32_t &type, const std::string &hashStr) {
+        std::map<std::string/*hash*/, std::map<uint32_t, RedisInfo> > allRedis = (CLIENT_REQ_REDIS_TYPE_MASTER == type) \
                 ? this->getMasterRedis() : this->getSlaveRedis();
 
-        list<RedisInfo> redisInfos;
+        std::list<RedisInfo> redisInfos;
 
         if (hashStr.empty()) {
             __foreach(it, allRedis) {
@@ -418,7 +384,7 @@ namespace socketRedisSentinel {
             return redisInfos;
         }
 
-        vector<string> allSlaves = Utils::splitStr(hashStr, "|");
+        std::vector<std::string> allSlaves = Utils::splitStr(hashStr, "|");
         if (allSlaves.empty()) {
             allSlaves = Utils::splitStr(hashStr, ",");
         }
@@ -434,7 +400,7 @@ namespace socketRedisSentinel {
     }
 
 
-    uint32_t Sentinel::redisComHash(const string& key, const int32_t &redisNums) {
+    uint32_t Sentinel::redisComHash(const std::string& key, const int32_t &redisNums) {
         if (0 >= redisNums) {
             LOG(Error, "illegal param", key, redisNums);
             return 0;
@@ -455,7 +421,7 @@ namespace socketRedisSentinel {
         return hashIndex;
     }
 
-    uint32_t Sentinel::redisCrc32Hash(const string &key, const int32_t &redisNum) {
+    uint32_t Sentinel::redisCrc32Hash(const std::string &key, const int32_t &redisNum) {
         if (redisNum <= 0) {
             LOG(Error, "illegal param", key, redisNum);
             return 0;
@@ -467,19 +433,19 @@ namespace socketRedisSentinel {
 
 
 
-    map<string/*hash*/, map<uint32_t, RedisInfo> > Sentinel::getSlaveRedis() {
+    std::map<std::string/*hash*/, std::map<uint32_t, RedisInfo> > Sentinel::getSlaveRedis() {
         return this->m_slaveRedis;
     }
 
-    void Sentinel::setSlaveRedis(const map<string/*hash*/, map<uint32_t, RedisInfo> > &info) {
+    void Sentinel::setSlaveRedis(const std::map<std::string/*hash*/, std::map<uint32_t, RedisInfo> > &info) {
         this->m_slaveRedis = info;
     }
 
-    map<string/*hash*/, map<uint32_t, RedisInfo> > Sentinel::getMasterRedis() {
+    std::map<std::string/*hash*/, std::map<uint32_t, RedisInfo> > Sentinel::getMasterRedis() {
         return this->m_masterRedis;
     }
 
-    void Sentinel::setMasterRedis(const map<string/*hash*/, map<uint32_t, RedisInfo> > &info) {
+    void Sentinel::setMasterRedis(const std::map<std::string/*hash*/, std::map<uint32_t, RedisInfo> > &info) {
         this->m_masterRedis = info;
     }
 

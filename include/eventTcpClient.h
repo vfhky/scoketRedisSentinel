@@ -15,10 +15,8 @@
 
 
 
-using namespace std;
 
 namespace socketRedisSentinel {
-
 
 
 
@@ -27,8 +25,8 @@ namespace socketRedisSentinel {
     {
     public:
 
-
-        bool doRequest(const std::string &ip, u_short port, const string &reqData, int16_t timeoutMics, string &rcvData);
+        // make an tcp request
+        bool doRequest(const std::string &ip, u_short port, const std::string &reqData, int16_t timeoutMics, std::string &rcvData);
 
 
 
@@ -36,19 +34,19 @@ namespace socketRedisSentinel {
 
     private:
 
-        event_base* getEventBase() const;
-        bool setEventBase(const event_base* base);
-
 
         static void setTcpNoDelay(evutil_socket_t fd);
 
+        // callback
         static void eventCb(struct bufferevent *bev, short event, void *ctx);
         static void readCb(struct bufferevent* bev, void* ctx);
         static void writeCb(struct bufferevent *bev, void *ctx);
         static void reqTimeoutCb(evutil_socket_t fd, short event, void* arg);
 
+        // add an event of sending data
         void sendDataCb(evutil_socket_t fd, short events, void *arg);
-        bool sendData(struct bufferevent *bev, const string &reqData);
+        // send data directly
+        bool sendData(struct bufferevent *bev, const std::string &reqData);
 
 
 
@@ -57,7 +55,8 @@ namespace socketRedisSentinel {
 
     private:
 
-        static string m_rcvData;
+        // tcp recivied data
+        static std::string m_rcvData;
 
 
 
@@ -70,8 +69,6 @@ namespace socketRedisSentinel {
 
 
     };
-
-    string EventTcpClient::m_rcvData = "";
 
 
 

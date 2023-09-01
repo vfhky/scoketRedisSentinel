@@ -11,7 +11,6 @@
 
 
 
-using namespace std;
 
 namespace socketRedisSentinel {
 
@@ -46,8 +45,9 @@ namespace socketRedisSentinel {
     private:
 
         static void trimCR(char *buf);
+        static void trimCR(std::string &buf);
 
-        static ClientReqInfo pharseReq(const string &req);
+        static ClientReqInfo pharseReq(const std::string &req);
 
 
 

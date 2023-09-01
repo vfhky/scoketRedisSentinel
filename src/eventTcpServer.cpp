@@ -31,7 +31,24 @@ namespace socketRedisSentinel {
         }
     }
 
-    ClientReqInfo EventTcpServer::pharseReq(const string &req) {
+    void EventTcpServer::trimCR(std::string &p) {
+        if (p.empty()) {
+            return;
+        }
+
+        size_t len = p.size();
+
+        if (0x0A == p[len - 1]) {
+            p[len - 1] = 0x00;
+        }
+        if (0x0D == p[len - 2]) {
+            p[len - 2] = 0x00;
+        }
+    }
+
+
+
+    ClientReqInfo EventTcpServer::pharseReq(const std::string &req) {
         ClientReqInfo reqInfo;
         if (req.empty()) {
             LOG(Info, reqInfo.dump());
@@ -46,8 +63,8 @@ namespace socketRedisSentinel {
         int32_t flag = 0;
 
         int32_t length = req.size();
-        stringstream ss;
-        string key;
+        std::stringstream ss;
+        std::string key;
         for (int32_t index = 0; index < length; index++) {
             char c = (char)req[index];
 
@@ -68,7 +85,7 @@ namespace socketRedisSentinel {
 
                 // settle
                 if (1 == flag || index == length - 1) {
-                    string value = ss.str();
+                    std::string value = ss.str();
                     std::transform(key.begin(), key.end(), key.begin(), ::tolower);
                     if (key == "type") {
                         reqInfo.type = static_cast<CLIENT_REQ_TYPE>(Utils::stringToU32(value));
@@ -116,19 +133,28 @@ namespace socketRedisSentinel {
 
 
     void EventTcpServer::readCb(struct bufferevent *bev, void *ctx) {
-        char buf[4096] = {0x00};
-        size_t readSize = bufferevent_read(bev, buf, sizeof(buf) - 1);
-        if (readSize < 0) {
-            LOG(Error, "bufferevent_read failed", buf, evutil_socket_error_to_string(EVUTIL_SOCKET_ERROR()));
-            exit(1);
+        struct evbuffer* input = bufferevent_get_input(bev);
+        std::string data = "";
+
+        char *buffer = new char[SOCKET_DATA_BATCH_SIZE];
+        size_t readSize = 0;
+        while (NULL != input) {
+            memset(buffer, 0x00, sizeof(buffer));
+            size_t len = bufferevent_read(bev, buffer, sizeof(buffer) - 1);
+            if (len <= 0) {
+                break;
+            }
+            // buffer[len] = '\0';
+            data += buffer;
+            readSize += len;
         }
+        delete []buffer;
+        EventTcpServer::trimCR(data);
+        LOG(Info, "readCb done", readSize, data);
 
-        buf[readSize] = '\0';
-        EventTcpServer::trimCR(buf);
-        LOG(Info, readSize, buf);
-
-        ClientReqInfo clientReqInfo = EventTcpServer::pharseReq(buf);
-        string rsp = LogicEntrance::instance().handleReq(clientReqInfo);
+        // pharse req data and handle it and make a respone to client.
+        ClientReqInfo clientReqInfo = EventTcpServer::pharseReq(data);
+        std::string rsp = LogicEntrance::instance().handleReq(clientReqInfo);
         bufferevent_write(bev, rsp.c_str(), rsp.size());
         LOG(Info, clientReqInfo.dump(), rsp);
     }
@@ -147,7 +173,7 @@ namespace socketRedisSentinel {
     void EventTcpServer::eventCb(struct bufferevent *bev, short event, void *ctx) {
         evutil_socket_t fd = bufferevent_getfd(bev);
         int i_errCode = EVUTIL_SOCKET_ERROR();
-        LOG(Debug, fd, i_errCode, evutil_socket_error_to_string(i_errCode) );
+        LOG(Debug, fd, i_errCode, event, evutil_socket_error_to_string(i_errCode) );
 
         if(event & BEV_EVENT_TIMEOUT) {
             LOG(Debug, "timeout reached");

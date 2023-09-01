@@ -113,6 +113,10 @@ static const uint16_t HTTP_LISTEN_PORT = 10087;
 static const uint16_t HTTPS_LISTEN_PORT = 10088;
 
 
+// size of tcp or http data
+static const int32_t SOCKET_DATA_BATCH_SIZE = 1024;
+
+
 
 
 
