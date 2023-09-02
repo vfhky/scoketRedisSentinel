@@ -1,5 +1,5 @@
 # socketRedisSentinel
-tcp原生通信从redis的sentinel域名解析数据
+从redis的sentinel域名获取master/slave的redis分片信息。支持客户端以`tcp`、`http`、`https`三种请求方式。
 
 
 #### 一、介绍
