@@ -24,6 +24,9 @@ namespace socketRedisSentinel {
     class EventTcpClient
     {
     public:
+        EventTcpClient();
+        ~EventTcpClient();
+
 
         // make an tcp request
         bool doRequest(const std::string &ip, u_short port, const std::string &reqData, int16_t timeoutMics, std::string &rcvData);
@@ -48,15 +51,24 @@ namespace socketRedisSentinel {
         // send data directly
         bool sendData(struct bufferevent *bev, const std::string &reqData);
 
+        // handle event base
+        bool ceateEventBase();
+        event_base* getEventBase() const;
+        void freeEventBase();
+        void loopExitEventBase();
 
-
+        // recieved data
+        void setRcvData(char * const rcvData);
+        char *getRcvData() const;
 
 
 
     private:
 
         // tcp recivied data
-        static std::string m_rcvData;
+        char *m_rcvData;
+
+        event_base* m_base;
 
 
 

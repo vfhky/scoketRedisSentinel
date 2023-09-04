@@ -7,8 +7,23 @@
 namespace socketRedisSentinel {
 
 
-    // tcp recieved data.
-    std::string EventTcpClient::m_rcvData = "";
+    EventTcpClient::EventTcpClient() {
+        this->m_rcvData = NULL;
+        this->m_base = NULL;
+    }
+
+    EventTcpClient::~EventTcpClient() {
+        if (NULL != this->m_rcvData) {
+            delete[] this->m_rcvData;
+            this->m_rcvData = NULL;
+            LOG(Debug, "~EventTcpClient m_rcvData done");
+        }
+        if (NULL != this->m_base) {
+            event_base_free(this->m_base);
+            LOG(Debug, "~EventTcpClient m_base done");
+        }
+    }
+
 
     void EventTcpClient::setTcpNoDelay(evutil_socket_t fd) {
         int one = 1;
@@ -35,7 +50,7 @@ namespace socketRedisSentinel {
         } else if(event & BEV_EVENT_READING) {
             bLoopExit = false;
             LOG(Debug, "eventCb read data is ready");
-        } else if(event & BEV_EVENT_WRITING ) {
+        } else if(event & BEV_EVENT_WRITING) {
             bLoopExit = false;
             LOG(Debug, "eventCb write data is ready");
         } else {
@@ -44,8 +59,8 @@ namespace socketRedisSentinel {
 
         // break loop
         if (bLoopExit && NULL != ctx) {
-            event_base* base = static_cast<event_base*>(ctx);
-            event_base_loopexit(base, NULL);
+            EventTcpClient* eventTcpClient = static_cast<EventTcpClient*>(ctx);
+            eventTcpClient->loopExitEventBase();
             LOG(Debug, "eventCb event_base_loopexit");
         }
     }
@@ -80,33 +95,26 @@ namespace socketRedisSentinel {
 
     // callback function when recieved data from server.
     void EventTcpClient::readCb(struct bufferevent* bev, void* ctx) {
-        struct evbuffer* input = bufferevent_get_input(bev);
-        std::string data = "";
-
-        char *buffer = new char[SOCKET_DATA_BATCH_SIZE];
-        size_t readSize = 0;
-        while (NULL != input) {
-            memset(buffer, 0x00, sizeof(buffer));
-            size_t len = evbuffer_remove(input, buffer, SOCKET_DATA_BATCH_SIZE - 1);
-            if (len <= 0) {
-                break;
-            }
-            // buffer[len] = '\0';
-            data += buffer;
-            readSize += len;
+        EventTcpClient* eventTcpClient = static_cast<EventTcpClient*>(ctx);
+        if (NULL == eventTcpClient) {
+            LOG(Error, "readCb ctx is NULL", evutil_socket_error_to_string(EVUTIL_SOCKET_ERROR()));
+            return;
         }
-        delete []buffer;
 
-        // set the recieved data to memeber.
-        m_rcvData = data;
+        struct evbuffer* input = bufferevent_get_input(bev);
+        size_t readSize = evbuffer_get_length(input);
+        if (readSize > 0) {
+            char *buffer = new char[readSize + 1];
+            evbuffer_copyout(input, buffer, readSize);
+            buffer[readSize] = '\0';
+            // set the recieved data to memeber.
+            eventTcpClient->setRcvData(buffer);
+        }
 
         // break loop
-        if (NULL != ctx) {
-            event_base* base = static_cast<event_base*>(ctx);
-            event_base_loopexit(base, NULL);
-        }
+        eventTcpClient->loopExitEventBase();
 
-        LOG(Debug, "readCb ok", ctx, readSize, m_rcvData);
+        LOG(Debug, "readCb ok", ctx, readSize, eventTcpClient->getRcvData());
     }
 
     // callback function when data was send to server.
@@ -117,35 +125,58 @@ namespace socketRedisSentinel {
     void EventTcpClient::reqTimeoutCb(evutil_socket_t fd, short event, void* arg) {
         bool bArg = NULL != arg;
         if (bArg) {
-            struct event_base* base = static_cast<struct event_base*>(arg);
-            event_base_loopbreak(base);
+            EventTcpClient * eventTcpClient = static_cast<EventTcpClient*>(arg);
+            eventTcpClient->loopExitEventBase();
         }
 
-        m_rcvData.clear();
-        LOG(Info, "timeout reached", fd, event, bArg, m_rcvData);
+        LOG(Info, "timeout reached", fd, event, bArg);
+    }
+
+    bool EventTcpClient::ceateEventBase() {
+        event_base* base = event_base_new();
+        if (NULL == base) {
+            LOG(Error, "event_base_new fail", \
+                evutil_socket_error_to_string(EVUTIL_SOCKET_ERROR()));
+            return false;
+        }
+
+        return true;
+    }
+
+    event_base* EventTcpClient::getEventBase() const {
+        return this->m_base;
+    }
+
+    void EventTcpClient::freeEventBase() {
+        if (NULL != this->m_base) {
+            event_base_free(this->m_base);
+        }
+    }
+    void EventTcpClient::loopExitEventBase() {
+        if (NULL != this->m_base) {
+            event_base_loopexit(this->m_base, NULL);
+        }
     }
 
 
     bool EventTcpClient::doRequest(const std::string &ip, u_short port, const std::string &reqData,
             int16_t timeoutMics, std::string &rcvData) {
-        event_base* base = event_base_new();
-        if (NULL == base) {
-            LOG(Error, "event_base_new fail", ip, port, timeoutMics, \
-                evutil_socket_error_to_string(EVUTIL_SOCKET_ERROR()), reqData);
+        if (!this->ceateEventBase()) {
             return false;
         }
 
+        event_base* base = this->getEventBase();
         bufferevent* bev = bufferevent_socket_new(base, -1, BEV_OPT_CLOSE_ON_FREE);
 
         // callback
         bufferevent_data_cb rCb = EventTcpClient::readCb;
         bufferevent_data_cb wCb = EventTcpClient::writeCb;;
         bufferevent_event_cb eventCb = EventTcpClient::eventCb;
-        bufferevent_setcb(bev, rCb, wCb, eventCb, base);
+        bufferevent_setcb(bev, rCb, wCb, eventCb, this);
         bufferevent_enable(bev, EV_READ | EV_WRITE | EV_PERSIST);
 
         // total request timeout callback
-        struct event* reqTimeoutEvent = evtimer_new(base, reqTimeoutCb, base);
+        struct event* reqTimeoutEvent = evtimer_new(base, reqTimeoutCb, this);
         struct timeval reqTimeout;
         reqTimeout.tv_sec = timeoutMics / 1000;
         reqTimeout.tv_usec = timeoutMics % 1000;
@@ -199,6 +230,14 @@ namespace socketRedisSentinel {
 
         LOG(Debug, "done", ip, port, timeoutMics, rcvData, reqData);
         return true;
+    }
+
+    void EventTcpClient::setRcvData(char * const rcvData) {
+        this->m_rcvData = rcvData;
+    }
+
+    char *EventTcpClient::getRcvData() const {
+        return this->m_rcvData;
     }
 
 
