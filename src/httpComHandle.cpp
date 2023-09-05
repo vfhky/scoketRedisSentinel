@@ -134,16 +134,16 @@ namespace socketRedisSentinel {
 
     const bool HttpComHandle::fillPostParams(struct evhttp_request *req, HttpReqInfo &httpReqInfo) {
         struct evbuffer* inbuf = evhttp_request_get_input_buffer(req);
-        std::stringstream dataStream;
+        std::stringstream rcvPostData;
         while (evbuffer_get_length(inbuf)) {
             int n = 0;
             char cbuf[128] = {0x00};
             n = evbuffer_remove(inbuf, cbuf, sizeof(cbuf));
             if (n > 0) {
-                dataStream.write(cbuf, n);
+                rcvPostData.write(cbuf, n);
             }
         }
-        LOG(Debug, dataStream.str());
+        LOG(Debug, rcvPostData.str());
 
         std::map<std::string, std::string> params;
         std::string contentType = "";
@@ -151,9 +151,9 @@ namespace socketRedisSentinel {
             contentType = httpReqInfo.headers["Content-Type"];
         }
         if (contentType.find("application/x-www-form-urlencoded") != std::string::npos) {
-            httpReqInfo.body = HttpComHandle::parseFormData(dataStream.str());
+            httpReqInfo.body = HttpComHandle::parseFormData(rcvPostData.str());
         } else if (contentType.find("application/json") != std::string::npos) {
-            httpReqInfo.body = Utils::simpleJsonToMap(dataStream.str());
+            httpReqInfo.body = Utils::simpleJsonToMap(rcvPostData.str());
         } else {
             LOG(Warn, "Unsupported Content-Type", contentType, httpReqInfo.dump());
             return false;

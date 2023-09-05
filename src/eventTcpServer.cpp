@@ -139,16 +139,17 @@ namespace socketRedisSentinel {
         char *buffer = new char[SOCKET_DATA_BATCH_SIZE];
         size_t readSize = 0;
         while (NULL != input) {
-            memset(buffer, 0x00, sizeof(buffer));
+            memset(buffer, 0x00, SOCKET_DATA_BATCH_SIZE);
             size_t len = bufferevent_read(bev, buffer, sizeof(buffer) - 1);
             if (len <= 0) {
                 break;
             }
             // buffer[len] = '\0';
-            data += buffer;
+            data.append(buffer, len);
             readSize += len;
         }
         delete []buffer;
+        buffer = NULL;
         EventTcpServer::trimCR(data);
         LOG(Info, "readCb done", readSize, data);
 

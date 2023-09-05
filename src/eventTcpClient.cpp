@@ -125,7 +125,7 @@ namespace socketRedisSentinel {
         // break loop
         eventTcpClient->loopExitEventBase();
 
-        LOG(Debug, "readCb ok", ctx, readSize, eventTcpClient->getRcvData());
+        LOG(Debug, "readCb ok", ctx, totalSize, eventTcpClient->getRcvData());
     }
 
     // callback function when data was send to server.
