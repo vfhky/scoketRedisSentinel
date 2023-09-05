@@ -222,6 +222,12 @@ namespace socketRedisSentinel {
         return strTmp;
     }
 
+    int64_t Utils::getMilliSecond() {
+        struct timeval tv;
+        ::gettimeofday(&tv, 0);
+        return static_cast<int64_t>(tv.tv_sec)*1000 + tv.tv_usec/1000;
+    }
+
     /**
      * pharse very simple json to map other than import third library.
      *

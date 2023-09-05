@@ -60,6 +60,7 @@ namespace socketRedisSentinel {
         // recieved data
         void setRcvData(char * const rcvData);
         char *getRcvData() const;
+        void freeRcvData();
 
 
 
