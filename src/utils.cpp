@@ -229,7 +229,7 @@ namespace socketRedisSentinel {
     }
 
     /**
-     * pharse very simple json to map other than import third library.
+     * parse very simple json to map other than import third library.
      *
      */
     std::map<std::string, std::string> Utils::simpleJsonToMap(const std::string& json) {

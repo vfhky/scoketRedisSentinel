@@ -152,7 +152,7 @@ namespace socketRedisSentinel {
         EventTcpServer::trimCR(data);
         LOG(Info, "readCb done", readSize, data);
 
-        // pharse req data and handle it and make a respone to client.
+        // parse req data and handle it and make a respone to client.
         ClientReqInfo clientReqInfo = EventTcpServer::pharseReq(data);
         std::string rsp = LogicEntrance::instance().handleReq(clientReqInfo);
         bufferevent_write(bev, rsp.c_str(), rsp.size());

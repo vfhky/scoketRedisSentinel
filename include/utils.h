@@ -300,7 +300,7 @@ namespace socketRedisSentinel {
 
         static int64_t getMilliSecond();
 
-        // pharse simple json to map other than import xpack library
+        // parse simple json to map other than import xpack library
         static std::map<std::string, std::string> simpleJsonToMap(const std::string& json);
 
 

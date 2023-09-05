@@ -13,15 +13,11 @@ namespace socketRedisSentinel {
     }
 
     EventTcpClient::~EventTcpClient() {
-        if (NULL != this->m_rcvData) {
-            delete[] this->m_rcvData;
-            this->m_rcvData = NULL;
-            LOG(Debug, "~EventTcpClient m_rcvData done");
-        }
-        if (NULL != this->m_base) {
-            event_base_free(this->m_base);
-            LOG(Debug, "~EventTcpClient m_base done");
-        }
+        LOG(Debug, "~EventTcpClient", static_cast<void*>(this->m_rcvData));
+        this->freeRcvData();
+
+        LOG(Debug, "~EventTcpClient", this->m_base);
+        this->freeEventBase();
     }
 
 
@@ -133,8 +129,8 @@ namespace socketRedisSentinel {
     }
 
     bool EventTcpClient::ceateEventBase() {
-        event_base* base = event_base_new();
-        if (NULL == base) {
+        this->m_base = event_base_new();
+        if (NULL == this->m_base) {
             LOG(Error, "event_base_new fail", \
                 evutil_socket_error_to_string(EVUTIL_SOCKET_ERROR()));
             return false;
@@ -150,8 +146,10 @@ namespace socketRedisSentinel {
     void EventTcpClient::freeEventBase() {
         if (NULL != this->m_base) {
             event_base_free(this->m_base);
+            this->m_base = NULL;
         }
     }
+
     void EventTcpClient::loopExitEventBase() {
         if (NULL != this->m_base) {
             event_base_loopexit(this->m_base, NULL);
@@ -161,6 +159,8 @@ namespace socketRedisSentinel {
 
     bool EventTcpClient::doRequest(const std::string &ip, u_short port, const std::string &reqData,
             int16_t timeoutMics, std::string &rcvData) {
+        int64_t bTime = Utils::getMilliSecond();
+
         if (!this->ceateEventBase()) {
             return false;
         }
@@ -192,7 +192,6 @@ namespace socketRedisSentinel {
             LOG(Error, "bufferevent_socket_connect fail", ip, port, evutil_socket_error_to_string(EVUTIL_SOCKET_ERROR()), reqData);
             bufferevent_free(bev);
             event_free(reqTimeoutEvent);
-            event_base_free(base);
             return false;
         }
 
@@ -207,7 +206,6 @@ namespace socketRedisSentinel {
             LOG(Error, "sendData fail", ip, port, evutil_socket_error_to_string(EVUTIL_SOCKET_ERROR()), reqData);
             bufferevent_free(bev);
             event_free(reqTimeoutEvent);
-            event_base_free(base);
             return false;
         }
 
@@ -217,18 +215,18 @@ namespace socketRedisSentinel {
         // release source
         if (NULL != bev) {
             bufferevent_free(bev);
+            bev = NULL;
         }
         if (NULL != reqTimeoutEvent) {
             event_free(reqTimeoutEvent);
-        }
-        if (NULL != base) {
-            event_base_free(base);
+            reqTimeoutEvent = NULL;
         }
 
         // return recieved data
         rcvData = m_rcvData;
-
-        LOG(Debug, "done", ip, port, timeoutMics, rcvData, reqData);
+        int64_t eTime = Utils::getMilliSecond();
+        int64_t timeMics = eTime - bTime;
+        LOG(Debug, "done", ip, port, timeoutMics, timeMics, rcvData, reqData);
         return true;
     }
 
@@ -238,6 +236,13 @@ namespace socketRedisSentinel {
 
     char *EventTcpClient::getRcvData() const {
         return this->m_rcvData;
+    }
+
+    void EventTcpClient::freeRcvData() {
+        if (NULL != this->m_rcvData) {
+            delete[] this->m_rcvData;
+            this->m_rcvData = NULL;
+        }
     }
 
 
