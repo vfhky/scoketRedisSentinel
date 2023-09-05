@@ -134,16 +134,16 @@ namespace socketRedisSentinel {
 
     const bool HttpComHandle::fillPostParams(struct evhttp_request *req, HttpReqInfo &httpReqInfo) {
         struct evbuffer* inbuf = evhttp_request_get_input_buffer(req);
-        std::stringstream rcvPostData;
-        while (evbuffer_get_length(inbuf)) {
-            int n = 0;
-            char cbuf[128] = {0x00};
-            n = evbuffer_remove(inbuf, cbuf, sizeof(cbuf));
-            if (n > 0) {
-                rcvPostData.write(cbuf, n);
+        std::string receivedPostData;
+        while (NULL != inbuf && evbuffer_get_length(inbuf)) {
+            int readSize = 0;
+            char buff[SOCKET_DATA_BATCH_SIZE] = {0x00};
+            readSize = evbuffer_remove(inbuf, buff, sizeof(buff));
+            if (readSize > 0) {
+                receivedPostData.append(buff, readSize);
             }
         }
-        LOG(Debug, rcvPostData.str());
+        LOG(Debug, receivedPostData);
 
         std::map<std::string, std::string> params;
         std::string contentType = "";
@@ -151,9 +151,9 @@ namespace socketRedisSentinel {
             contentType = httpReqInfo.headers["Content-Type"];
         }
         if (contentType.find("application/x-www-form-urlencoded") != std::string::npos) {
-            httpReqInfo.body = HttpComHandle::parseFormData(rcvPostData.str());
+            httpReqInfo.body = HttpComHandle::parseFormData(receivedPostData);
         } else if (contentType.find("application/json") != std::string::npos) {
-            httpReqInfo.body = Utils::simpleJsonToMap(rcvPostData.str());
+            httpReqInfo.body = Utils::simpleJsonToMap(receivedPostData);
         } else {
             LOG(Warn, "Unsupported Content-Type", contentType, httpReqInfo.dump());
             return false;

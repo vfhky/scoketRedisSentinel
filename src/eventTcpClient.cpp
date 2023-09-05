@@ -99,21 +99,21 @@ namespace socketRedisSentinel {
         struct evbuffer* input = bufferevent_get_input(bev);
         size_t readSize = 0;
         char* receivedData = NULL;
-        size_t totalSize = 0;
+        size_t totalReadSize = 0;
 
         while ((readSize = evbuffer_get_length(input)) > 0) {
             char* buffer = new char[readSize+1];
             evbuffer_copyout(input, buffer, readSize);
 
-            char* resizedData = new char[totalSize + readSize + 1];
+            char* resizedData = new char[totalReadSize + readSize + 1];
             if (receivedData != NULL) {
-                memcpy(resizedData, receivedData, totalSize);
+                memcpy(resizedData, receivedData, totalReadSize);
                 delete[] receivedData;
             }
-            memcpy(resizedData + totalSize, buffer, readSize);
-            resizedData[totalSize + readSize] = '\0';
+            memcpy(resizedData + totalReadSize, buffer, readSize);
+            resizedData[totalReadSize + readSize] = '\0';
             receivedData = resizedData;
-            totalSize += readSize;
+            totalReadSize += readSize;
 
             delete[] buffer;
             evbuffer_drain(input, readSize);
@@ -125,7 +125,7 @@ namespace socketRedisSentinel {
         // break loop
         eventTcpClient->loopExitEventBase();
 
-        LOG(Debug, "readCb ok", ctx, totalSize, eventTcpClient->getRcvData());
+        LOG(Debug, "readCb ok", ctx, totalReadSize, eventTcpClient->getRcvData());
     }
 
     // callback function when data was send to server.

@@ -144,12 +144,11 @@ namespace socketRedisSentinel {
             if (len <= 0) {
                 break;
             }
-            // buffer[len] = '\0';
+            buffer[len] = '\0';
             data.append(buffer, len);
             readSize += len;
         }
         delete []buffer;
-        buffer = NULL;
         EventTcpServer::trimCR(data);
         LOG(Info, "readCb done", readSize, data);
 
