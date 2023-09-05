@@ -52,7 +52,7 @@ namespace socketRedisSentinel {
         bool sendData(struct bufferevent *bev, const std::string &reqData);
 
         // handle event base
-        bool ceateEventBase();
+        bool createEventBase();
         event_base* getEventBase() const;
         void freeEventBase();
         void loopExitEventBase();

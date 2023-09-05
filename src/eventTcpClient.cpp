@@ -13,11 +13,10 @@ namespace socketRedisSentinel {
     }
 
     EventTcpClient::~EventTcpClient() {
-        LOG(Debug, "~EventTcpClient", static_cast<void*>(this->m_rcvData));
+        LOG(Debug, "~EventTcpClient begin", this->m_base, static_cast<void*>(this->m_rcvData));
         this->freeRcvData();
-
-        LOG(Debug, "~EventTcpClient", this->m_base);
         this->freeEventBase();
+        LOG(Debug, "~EventTcpClient end", this->m_base, static_cast<void*>(this->m_rcvData));
     }
 
 
@@ -128,7 +127,7 @@ namespace socketRedisSentinel {
         LOG(Info, "timeout reached", fd, event, bArg);
     }
 
-    bool EventTcpClient::ceateEventBase() {
+    bool EventTcpClient::createEventBase() {
         this->m_base = event_base_new();
         if (NULL == this->m_base) {
             LOG(Error, "event_base_new fail", \
@@ -161,7 +160,7 @@ namespace socketRedisSentinel {
             int16_t timeoutMics, std::string &rcvData) {
         int64_t bTime = Utils::getMilliSecond();
 
-        if (!this->ceateEventBase()) {
+        if (!this->createEventBase()) {
             return false;
         }
 
@@ -223,7 +222,9 @@ namespace socketRedisSentinel {
         }
 
         // return recieved data
-        rcvData = m_rcvData;
+        if (NULL != this->getRcvData()) {
+            rcvData = this->getRcvData();
+        }
         int64_t eTime = Utils::getMilliSecond();
         int64_t timeMics = eTime - bTime;
         LOG(Debug, "done", ip, port, timeoutMics, timeMics, rcvData, reqData);
