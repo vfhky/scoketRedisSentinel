@@ -62,9 +62,21 @@ namespace socketRedisSentinel {
         char *getRcvData() const;
         void freeRcvData();
 
+        // local ip and port
+        void setLocalIp(const char *localIp);
+        std::string getLocalIp() const;
+        void setLocalPort(const uint16_t localPort);
+        uint16_t getLocalPort() const;
+        static void fillLocalIpPort(evutil_socket_t fd, void *ctx);
+
+
 
 
     private:
+
+        // local ip and port
+        std::string m_localIp;
+        uint16_t m_localPort;
 
         // tcp recivied data
         char *m_rcvData;

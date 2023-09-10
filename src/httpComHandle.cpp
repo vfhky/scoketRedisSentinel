@@ -133,15 +133,29 @@ namespace socketRedisSentinel {
     }
 
     const bool HttpComHandle::fillPostParams(struct evhttp_request *req, HttpReqInfo &httpReqInfo) {
-        struct evbuffer* inbuf = evhttp_request_get_input_buffer(req);
-        std::string receivedPostData;
-        while (NULL != inbuf && evbuffer_get_length(inbuf)) {
-            int readSize = 0;
-            char buff[SOCKET_DATA_BATCH_SIZE] = {0x00};
-            readSize = evbuffer_remove(inbuf, buff, sizeof(buff));
-            if (readSize > 0) {
-                receivedPostData.append(buff, readSize);
+        struct evbuffer* input = evhttp_request_get_input_buffer(req);
+
+        char* receivedPostData = NULL;
+        size_t readSize = 0;
+        size_t totalReadSize = 0;
+
+        while (NULL != input && (readSize = evbuffer_get_length(input)) > 0) {
+            char* buffer = new char[readSize+1];
+            memset(buffer, 0x00, readSize+1);
+            evbuffer_copyout(input, buffer, readSize);
+
+            char* resizedData = new char[totalReadSize + readSize + 1];
+            if (receivedPostData != NULL) {
+                memcpy(resizedData, receivedPostData, totalReadSize);
+                delete[] receivedPostData;
             }
+            memcpy(resizedData + totalReadSize, buffer, readSize);
+            resizedData[totalReadSize + readSize] = '\0';
+            receivedPostData = resizedData;
+            totalReadSize += readSize;
+
+            delete[] buffer;
+            evbuffer_drain(input, readSize);
         }
         LOG(Debug, receivedPostData);
 

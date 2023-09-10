@@ -134,26 +134,34 @@ namespace socketRedisSentinel {
 
     void EventTcpServer::readCb(struct bufferevent *bev, void *ctx) {
         struct evbuffer* input = bufferevent_get_input(bev);
-        std::string data = "";
-
-        char *buffer = new char[SOCKET_DATA_BATCH_SIZE];
+        char* receivedData = NULL;
         size_t readSize = 0;
-        while (NULL != input) {
-            memset(buffer, 0x00, SOCKET_DATA_BATCH_SIZE);
-            size_t len = bufferevent_read(bev, buffer, sizeof(buffer) - 1);
-            if (len <= 0) {
-                break;
+        size_t totalReadSize = 0;
+
+        while (NULL != input && (readSize = evbuffer_get_length(input)) > 0) {
+            char* buffer = new char[readSize+1];
+            memset(buffer, 0x00, readSize+1);
+            evbuffer_copyout(input, buffer, readSize);
+
+            char* resizedData = new char[totalReadSize + readSize + 1];
+            memset(resizedData, 0x00, totalReadSize + readSize + 1);
+            if (receivedData != NULL) {
+                memcpy(resizedData, receivedData, totalReadSize);
+                delete[] receivedData;
             }
-            buffer[len] = '\0';
-            data.append(buffer, len);
-            readSize += len;
+            memcpy(resizedData + totalReadSize, buffer, readSize);
+            resizedData[totalReadSize + readSize] = '\0';
+            receivedData = resizedData;
+            totalReadSize += readSize;
+
+            delete[] buffer;
+            evbuffer_drain(input, readSize);
         }
-        delete []buffer;
-        EventTcpServer::trimCR(data);
-        LOG(Info, "readCb done", readSize, data);
+        EventTcpServer::trimCR(receivedData);
+        LOG(Info, "readCb done", totalReadSize, receivedData);
 
         // parse req data and handle it and make a respone to client.
-        ClientReqInfo clientReqInfo = EventTcpServer::pharseReq(data);
+        ClientReqInfo clientReqInfo = EventTcpServer::pharseReq(receivedData);
         std::string rsp = LogicEntrance::instance().handleReq(clientReqInfo);
         bufferevent_write(bev, rsp.c_str(), rsp.size());
         LOG(Info, clientReqInfo.dump(), rsp);

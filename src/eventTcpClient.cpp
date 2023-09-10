@@ -20,10 +20,58 @@ namespace socketRedisSentinel {
     }
 
 
+    // local ip and port
+    void EventTcpClient::setLocalIp(const char *localIp) {
+        this->m_localIp = localIp;
+    }
+
+    std::string EventTcpClient::getLocalIp() const {
+        return this->m_localIp;
+    }
+
+    void EventTcpClient::setLocalPort(const uint16_t localPort) {
+        this->m_localPort = localPort;
+    }
+
+    uint16_t EventTcpClient::getLocalPort() const {
+        return this->m_localPort;
+    }
+
+
     void EventTcpClient::setTcpNoDelay(evutil_socket_t fd) {
         int one = 1;
         int ret = setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &one, sizeof(one));
         LOG(Debug, "setTcpNoDelay done", fd, ret);
+    }
+
+    void EventTcpClient::fillLocalIpPort(evutil_socket_t fd, void *ctx) {
+        if (NULL == ctx) {
+            LOG(Debug, "illegal", fd, ctx);
+            return;
+        }
+
+        EventTcpClient* eventTcpClient = static_cast<EventTcpClient*>(ctx);
+        struct sockaddr_storage ss;
+        socklen_t len = sizeof(ss);
+        if (getsockname(fd, (struct sockaddr*)&ss, &len) == 0) {
+            if (ss.ss_family == AF_INET) {
+                struct sockaddr_in* sin = (struct sockaddr_in*)&ss;
+                char addr[INET_ADDRSTRLEN] = {0x00};
+                const char* str = inet_ntop(AF_INET, &(sin->sin_addr), addr, INET_ADDRSTRLEN);
+                if (str) {
+                    eventTcpClient->setLocalIp(str);
+                    eventTcpClient->setLocalPort(ntohs(sin->sin_port));
+                }
+            } else if (ss.ss_family == AF_INET6) {
+                struct sockaddr_in6* sin6 = (struct sockaddr_in6*)&ss;
+                char addr[INET6_ADDRSTRLEN] = {0x00};
+                const char* str = inet_ntop(AF_INET6, &(sin6->sin6_addr), addr, INET6_ADDRSTRLEN);
+                if (str) {
+                    eventTcpClient->setLocalIp(addr);
+                    eventTcpClient->setLocalPort(ntohs(sin6->sin6_port));
+                }
+            }
+        }
     }
 
     void EventTcpClient::eventCb(struct bufferevent *bev, short event, void *ctx) {
@@ -37,7 +85,8 @@ namespace socketRedisSentinel {
         } else if (event & BEV_EVENT_CONNECTED) {
             EventTcpClient::setTcpNoDelay(fd);
             bLoopExit = false;
-            LOG(Debug, "eventCb connection success");
+            EventTcpClient::fillLocalIpPort(fd, ctx);
+            LOG(Debug, "eventCb connection success", bev);
         } else if (event & BEV_EVENT_EOF) {
             LOG(Debug, "eventCb connection closed");
         } else if (event & BEV_EVENT_ERROR) {
@@ -97,12 +146,13 @@ namespace socketRedisSentinel {
         }
 
         struct evbuffer* input = bufferevent_get_input(bev);
-        size_t readSize = 0;
         char* receivedData = NULL;
+        size_t readSize = 0;
         size_t totalReadSize = 0;
 
         while ((readSize = evbuffer_get_length(input)) > 0) {
             char* buffer = new char[readSize+1];
+            memset(buffer, 0x00, readSize+1);
             evbuffer_copyout(input, buffer, readSize);
 
             char* resizedData = new char[totalReadSize + readSize + 1];
@@ -243,7 +293,7 @@ namespace socketRedisSentinel {
         }
         int64_t eTime = Utils::getMilliSecond();
         int64_t timeMics = eTime - bTime;
-        LOG(Debug, "done", ip, port, timeoutMics, timeMics, rcvData, reqData);
+        LOG(Info, "doRequest done", ip, port, this->getLocalIp(), this->getLocalPort(), timeoutMics, timeMics, rcvData, reqData);
         return true;
     }
 
