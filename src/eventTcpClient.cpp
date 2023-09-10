@@ -79,7 +79,7 @@ namespace socketRedisSentinel {
     void EventTcpClient::eventCb(struct bufferevent *bev, short event, void *ctx) {
         evutil_socket_t fd = 0;
         if (NULL != bev) {
-            bufferevent_getfd(bev);
+            fd = bufferevent_getfd(bev);
         }
         int i_errCode = EVUTIL_SOCKET_ERROR();
         LOG(Debug, fd, bev, i_errCode, event, evutil_socket_error_to_string(i_errCode));
