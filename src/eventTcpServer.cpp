@@ -164,6 +164,10 @@ namespace socketRedisSentinel {
         ClientReqInfo clientReqInfo = EventTcpServer::pharseReq(receivedData);
         std::string rsp = LogicEntrance::instance().handleReq(clientReqInfo);
         bufferevent_write(bev, rsp.c_str(), rsp.size());
+
+        if (NULL != receivedData) {
+            delete[] receivedData;
+        }
         LOG(Info, clientReqInfo.dump(), rsp);
     }
 

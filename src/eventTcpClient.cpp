@@ -22,7 +22,9 @@ namespace socketRedisSentinel {
 
     // local ip and port
     void EventTcpClient::setLocalIp(const char *localIp) {
-        this->m_localIp = localIp;
+        if (NULL != localIp) {
+            this->m_localIp = localIp;
+        }
     }
 
     std::string EventTcpClient::getLocalIp() const {
@@ -75,9 +77,12 @@ namespace socketRedisSentinel {
     }
 
     void EventTcpClient::eventCb(struct bufferevent *bev, short event, void *ctx) {
-        evutil_socket_t fd = bufferevent_getfd(bev);
+        evutil_socket_t fd = 0;
+        if (NULL != bev) {
+            bufferevent_getfd(bev);
+        }
         int i_errCode = EVUTIL_SOCKET_ERROR();
-        LOG(Debug, fd, i_errCode, event, evutil_socket_error_to_string(i_errCode) );
+        LOG(Debug, fd, bev, i_errCode, event, evutil_socket_error_to_string(i_errCode));
 
         bool bLoopExit = true;
         if(event & BEV_EVENT_TIMEOUT) {
@@ -86,7 +91,7 @@ namespace socketRedisSentinel {
             EventTcpClient::setTcpNoDelay(fd);
             bLoopExit = false;
             EventTcpClient::fillLocalIpPort(fd, ctx);
-            LOG(Debug, "eventCb connection success", bev);
+            LOG(Debug, "eventCb connection success");
         } else if (event & BEV_EVENT_EOF) {
             LOG(Debug, "eventCb connection closed");
         } else if (event & BEV_EVENT_ERROR) {
@@ -150,7 +155,7 @@ namespace socketRedisSentinel {
         size_t readSize = 0;
         size_t totalReadSize = 0;
 
-        while ((readSize = evbuffer_get_length(input)) > 0) {
+        while (NULL != input && (readSize = evbuffer_get_length(input)) > 0) {
             char* buffer = new char[readSize+1];
             memset(buffer, 0x00, readSize+1);
             evbuffer_copyout(input, buffer, readSize);
@@ -298,7 +303,9 @@ namespace socketRedisSentinel {
     }
 
     void EventTcpClient::setRcvData(char * const rcvData) {
-        this->m_rcvData = rcvData;
+        if (NULL != rcvData) {
+            this->m_rcvData = rcvData;
+        }
     }
 
     char *EventTcpClient::getRcvData() const {
