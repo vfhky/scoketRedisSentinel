@@ -28,7 +28,6 @@ namespace socketRedisSentinel {
     EventTcpClient::~EventTcpClient() {
         this->freeRcvData();
         this->freeEventBase();
-        this->m_rcvData.clear();
     }
 
 
@@ -163,10 +162,10 @@ namespace socketRedisSentinel {
             hiRedisRespValue = HiRedisRespUtils::processItem(receivedDataStr);
             LOG(Debug, totalReadSize, hiRedisRespValue.dump());
         } catch (const HiRedisException &e) {
-            LOG(Debug, "received data not completed", totalReadSize, hiRedisRespValue.dump());
+            LOG(Debug, "received data not completed", totalReadSize, hiRedisRespValue.dump(), e.what());
             return false;
         } catch (const MyException &e) {
-            LOG(Error, "illegal data", totalReadSize, hiRedisRespValue.dump(), receivedData);
+            LOG(Error, "illegal data", totalReadSize, hiRedisRespValue.dump(), e.what(), receivedData);
         } catch (...) {
             LOG(Error, "unknown error", totalReadSize, hiRedisRespValue.dump(), receivedData);
         }

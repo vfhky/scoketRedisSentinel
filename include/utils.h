@@ -7,8 +7,8 @@
  */
 
 
-#ifndef __SCOKET_REDIS_SENTINEL_UTILS_H__
-#define __SCOKET_REDIS_SENTINEL_UTILS_H__
+#ifndef __SOCKET_REDIS_SENTINEL_UTILS_H__
+#define __SOCKET_REDIS_SENTINEL_UTILS_H__
 
 
 #include <arpa/inet.h>

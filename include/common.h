@@ -7,8 +7,8 @@
  */
 
 
-#ifndef __SCOKET_REDIS_SENTINEL_COMMON_H__
-#define __SCOKET_REDIS_SENTINEL_COMMON_H__
+#ifndef __SOCKET_REDIS_SENTINEL_COMMON_H__
+#define __SOCKET_REDIS_SENTINEL_COMMON_H__
 
 
 #include <sys/socket.h>
