@@ -9,7 +9,7 @@
 .vscode
 *.zip
 *.rar
-bin/*
+bin/socketRedisSentinel
 *.d
 lib
 
