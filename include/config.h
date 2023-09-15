@@ -1,3 +1,12 @@
+/**
+ * Copyright (c) 2023-07, typecodes.com (vfhky@typecodes.com)
+ *
+ * All rights reserved.
+ *
+ * Conguration for project.
+ */
+
+
 #ifndef __SCOKET_REDIS_SENTINEL_CONFIG_H__
 #define __SCOKET_REDIS_SENTINEL_CONFIG_H__
 

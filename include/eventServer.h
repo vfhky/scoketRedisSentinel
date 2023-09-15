@@ -1,3 +1,12 @@
+/**
+ * Copyright (c) 2023-07, typecodes.com (vfhky@typecodes.com)
+ *
+ * All rights reserved.
+ *
+ * The entrance of creating an server like http/https/tcp.
+ */
+
+
 #ifndef __SCOKET_REDIS_SENTINEL_EVENT_SERVER_H__
 #define __SCOKET_REDIS_SENTINEL_EVENT_SERVER_H__
 

@@ -1,3 +1,12 @@
+/**
+ * Copyright (c) 2023-07, typecodes.com (vfhky@typecodes.com)
+ *
+ * All rights reserved.
+ *
+ * Entrance of logic handling.
+ */
+
+
 #ifndef __SCOKET_REDIS_SENTINEL_LOGIC_ENTRANCE_H__
 #define __SCOKET_REDIS_SENTINEL_LOGIC_ENTRANCE_H__
 

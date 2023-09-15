@@ -1,3 +1,12 @@
+/**
+ * Copyright (c) 2023-07, typecodes.com (vfhky@typecodes.com)
+ *
+ * All rights reserved.
+ *
+ * Tools for hanlding sentinel.
+ */
+
+
 #include "sentinel.h"
 #include "eventTcpClient.h"
 
@@ -192,7 +201,6 @@ namespace socketRedisSentinel {
 
 
 
-
     /**
      * 解析 slave 命令返回的数据
      * *1
@@ -273,7 +281,7 @@ namespace socketRedisSentinel {
                     key = data.str();
                 } else if (4 == flag) { // value的长度获取完毕，进入获取value的值
                     flag = 5;
-                }  else if (5 == flag) { // value的值
+                } else if (5 == flag) { // value的值
                     value = data.str();
                     singleSlave[key] = value;
                     key.clear();

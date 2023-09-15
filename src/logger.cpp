@@ -1,3 +1,12 @@
+/**
+ * Copyright (c) 2023-07, typecodes.com (vfhky@typecodes.com)
+ *
+ * All rights reserved.
+ *
+ * Log tool for project.
+ */
+
+
 #include <limits.h>
 #include <sstream>
 #include <iostream>

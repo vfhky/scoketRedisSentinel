@@ -1,3 +1,12 @@
+/**
+ * Copyright (c) 2023-07, typecodes.com (vfhky@typecodes.com)
+ *
+ * All rights reserved.
+ *
+ * Server demonize.
+ */
+
+
 #ifndef __SCOKET_REDIS_SENTINEL_DEMONIZE_H__
 #define __SCOKET_REDIS_SENTINEL_DEMONIZE_H__
 

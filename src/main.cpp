@@ -1,3 +1,12 @@
+/**
+ * Copyright (c) 2023-07, typecodes.com (vfhky@typecodes.com)
+ *
+ * All rights reserved.
+ *
+ * Entrance of project, and the start of entire server.
+ */
+
+
 #include "sentinel.h"
 #include "utils.h"
 #include "demonize.h"

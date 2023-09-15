@@ -1,3 +1,12 @@
+/**
+ * Copyright (c) 2023-07, typecodes.com (vfhky@typecodes.com)
+ *
+ * All rights reserved.
+ *
+ * Tools for tcp client.
+ */
+
+
 #ifndef __SCOKET_REDIS_SENTINEL_EVENT_TCP_CLIENT_H__
 #define __SCOKET_REDIS_SENTINEL_EVENT_TCP_CLIENT_H__
 
@@ -57,15 +66,19 @@ namespace socketRedisSentinel {
         void freeEventBase();
         void loopExitEventBase();
 
-        // recieved data
-        void setRcvData(char * const rcvData);
-        char *getRcvData() const;
+        // received data
+        void setRcvData(char * const rcvData, const size_t &rcvDataSize);
+        std::string getRcvData() const;
+        size_t getRcvDataSize() const;
         void freeRcvData();
+
+        // check whether the server have send data completely and client recevied completely
+        static bool checkReadDataCompleted(const char *receivedData, const size_t &totalReadSize);
 
         // local ip and port
         void setLocalIp(const char *localIp);
         std::string getLocalIp() const;
-        void setLocalPort(const uint16_t localPort);
+        void setLocalPort(const uint16_t &localPort);
         uint16_t getLocalPort() const;
         static void fillLocalIpPort(evutil_socket_t fd, void *ctx);
 
@@ -78,8 +91,9 @@ namespace socketRedisSentinel {
         std::string m_localIp;
         uint16_t m_localPort;
 
-        // tcp recivied data
-        char *m_rcvData;
+        // tcp received data
+        std::string m_rcvData;
+        size_t m_rcvDataSize;
 
         event_base* m_base;
 

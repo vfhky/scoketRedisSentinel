@@ -1,3 +1,12 @@
+/**
+ * Copyright (c) 2023-07, typecodes.com (vfhky@typecodes.com)
+ *
+ * All rights reserved.
+ *
+ * Tools for handling the request of http/https.
+ */
+
+
 #include "httpComHandle.h"
 #include "logicEntrance.h"
 

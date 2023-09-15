@@ -1,3 +1,12 @@
+/**
+ * Copyright (c) 2023-07, typecodes.com (vfhky@typecodes.com)
+ *
+ * All rights reserved.
+ *
+ * Creating a tcp server.
+ */
+
+
 #include "eventTcpServer.h"
 #include "logicEntrance.h"
 
