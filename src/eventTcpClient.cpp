@@ -1,4 +1,15 @@
+/**
+ * Copyright (c) 2023-07, typecodes.com (vfhky@typecodes.com)
+ *
+ * All rights reserved.
+ *
+ * Tools for tcp client.
+ */
+
+
 #include "eventTcpClient.h"
+#include "hiRedisRespUtils.h"
+#include "hiRedisException.h"
 
 
 
@@ -8,15 +19,16 @@ namespace socketRedisSentinel {
 
 
     EventTcpClient::EventTcpClient() {
-        this->m_rcvData = NULL;
+        this->freeRcvData();
         this->m_base = NULL;
+        this->m_localIp = "";
+        this->m_localPort = 0;
     }
 
     EventTcpClient::~EventTcpClient() {
-        LOG(Debug, "~EventTcpClient begin", this->m_base, static_cast<void*>(this->m_rcvData));
         this->freeRcvData();
         this->freeEventBase();
-        LOG(Debug, "~EventTcpClient end", this->m_base, static_cast<void*>(this->m_rcvData));
+        this->m_rcvData.clear();
     }
 
 
@@ -31,7 +43,7 @@ namespace socketRedisSentinel {
         return this->m_localIp;
     }
 
-    void EventTcpClient::setLocalPort(const uint16_t localPort) {
+    void EventTcpClient::setLocalPort(const uint16_t &localPort) {
         this->m_localPort = localPort;
     }
 
@@ -134,12 +146,32 @@ namespace socketRedisSentinel {
 
         string reqData = data + "\n";
         if (0 == bufferevent_write(bev, reqData.c_str(), reqData.size())) {
-            LOG(Debug, "bufferevent_write ok , wait callback", reqData);
+            LOG(Debug, "===> sendData ok , wait callback", reqData);
             return true;
         }
 
-        LOG(Error, "bufferevent_write fail", reqData, evutil_socket_error_to_string(EVUTIL_SOCKET_ERROR()));
+        LOG(Error, "===> sendData fail", reqData, evutil_socket_error_to_string(EVUTIL_SOCKET_ERROR()));
         return false;
+    }
+
+    // check the data received from server entirely.
+    bool EventTcpClient::checkReadDataCompleted(const char *receivedData, const size_t &totalReadSize) {
+        const std::string receivedDataStr(receivedData, totalReadSize);
+
+        HiRedisReplyData hiRedisRespValue;
+        try {
+            hiRedisRespValue = HiRedisRespUtils::processItem(receivedDataStr);
+            LOG(Debug, totalReadSize, hiRedisRespValue.dump());
+        } catch (const HiRedisException &e) {
+            LOG(Debug, "received data not completed", totalReadSize, hiRedisRespValue.dump());
+            return false;
+        } catch (const MyException &e) {
+            LOG(Error, "illegal data", totalReadSize, hiRedisRespValue.dump(), receivedData);
+        } catch (...) {
+            LOG(Error, "unknown error", totalReadSize, hiRedisRespValue.dump(), receivedData);
+        }
+
+        return true;
     }
 
     // callback function when recieved data from server.
@@ -151,36 +183,25 @@ namespace socketRedisSentinel {
         }
 
         struct evbuffer* input = bufferevent_get_input(bev);
-        char* receivedData = NULL;
-        size_t readSize = 0;
-        size_t totalReadSize = 0;
-
-        while (NULL != input && (readSize = evbuffer_get_length(input)) > 0) {
-            char* buffer = new char[readSize+1];
-            memset(buffer, 0x00, readSize+1);
-            evbuffer_copyout(input, buffer, readSize);
-
-            char* resizedData = new char[totalReadSize + readSize + 1];
-            if (receivedData != NULL) {
-                memcpy(resizedData, receivedData, totalReadSize);
-                delete[] receivedData;
-            }
-            memcpy(resizedData + totalReadSize, buffer, readSize);
-            resizedData[totalReadSize + readSize] = '\0';
-            receivedData = resizedData;
-            totalReadSize += readSize;
-
-            delete[] buffer;
-            evbuffer_drain(input, readSize);
+        size_t receivedDataSize = evbuffer_get_length(input);
+        if (receivedDataSize > 0) {
+            char *receivedData = new char[receivedDataSize + 1];
+            evbuffer_copyout(input, receivedData, receivedDataSize);
+            receivedData[receivedDataSize] = '\0';
+            // set the recieved data to memeber.
+            eventTcpClient->setRcvData(receivedData, receivedDataSize);
+            // reset data readed.
+            evbuffer_drain(input, receivedDataSize);
         }
 
-        // set the recieved data to memeber.
-        eventTcpClient->setRcvData(receivedData);
-
         // break loop
-        eventTcpClient->loopExitEventBase();
-
-        LOG(Debug, "readCb ok", ctx, totalReadSize, eventTcpClient->getRcvData());
+        bool bReadDataCompleted = EventTcpClient::checkReadDataCompleted(eventTcpClient->getRcvData().c_str(), \
+                eventTcpClient->getRcvDataSize());
+        LOG(Debug, "===> read success", ctx, bReadDataCompleted, receivedDataSize, \
+                eventTcpClient->getRcvDataSize(), eventTcpClient->getRcvData());
+        if (bReadDataCompleted) {
+            eventTcpClient->loopExitEventBase();
+        }
     }
 
     // callback function when data was send to server.
@@ -293,30 +314,32 @@ namespace socketRedisSentinel {
         }
 
         // return recieved data
-        if (NULL != this->getRcvData()) {
-            rcvData = this->getRcvData();
-        }
+        rcvData = this->getRcvData();
         int64_t eTime = Utils::getMilliSecond();
         int64_t timeMics = eTime - bTime;
-        LOG(Info, "doRequest done", ip, port, this->getLocalIp(), this->getLocalPort(), timeoutMics, timeMics, rcvData, reqData);
+        LOG(Info, "doRequest done", ip, port, this->getLocalIp(), this->getLocalPort(), timeoutMics, timeMics, this->getRcvDataSize(), rcvData, reqData);
         return true;
     }
 
-    void EventTcpClient::setRcvData(char * const rcvData) {
-        if (NULL != rcvData) {
-            this->m_rcvData = rcvData;
+    void EventTcpClient::setRcvData(char * const rcvData, const size_t &rcvDataSize) {
+        if (NULL != rcvData && rcvDataSize > 0) {
+            this->m_rcvData.append(rcvData, rcvDataSize);
+            this->m_rcvDataSize += rcvDataSize;
+            delete [] rcvData;
         }
     }
 
-    char *EventTcpClient::getRcvData() const {
+    std::string EventTcpClient::getRcvData() const {
         return this->m_rcvData;
     }
 
+    size_t EventTcpClient::getRcvDataSize() const {
+        return this->m_rcvDataSize;
+    }
+
     void EventTcpClient::freeRcvData() {
-        if (NULL != this->m_rcvData) {
-            delete[] this->m_rcvData;
-            this->m_rcvData = NULL;
-        }
+        this->m_rcvData.clear();
+        this->m_rcvDataSize = 0;
     }
 
 
