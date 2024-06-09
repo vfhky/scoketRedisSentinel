@@ -5,6 +5,7 @@
 #### 一、介绍
 基于 Libevent 2.1.12 stable 和 OpenSSL 3.0 库开发。
 ```
+# 查看ubuntu版本
 root@typecodes:~# lsb_release -a
 No LSB modules are available.
 Distributor ID: Ubuntu
@@ -12,6 +13,11 @@ Description:    Ubuntu 22.04.3 LTS
 Release:        22.04
 Codename:       jammy
 root@typecodes:~#
+
+# 安装openssl
+apt install libssl-dev openssl -y
+
+# 查看openssl版本
 root@typecodes:~# openssl version
 OpenSSL 3.0.2 15 Mar 2022 (Library: OpenSSL 3.0.2 15 Mar 2022)
 root@typecodes:~#
@@ -101,12 +107,38 @@ writing new private key to 'server.key'
 vfhky@typecodes:~/bin/sentinel$
 
 ## 也可以生成X509格式的证书
-vfhky@typecodes:~/bin/sentinel$ openssl req -x509 -newkey rsa:1024 -keyout server.key -out server.crt -nodes -subj "/C=CN/ST=GD/L=SZ/O=YY/OU=IT/CN=yy.com"
+vfhky@typecodes:~/bin/sentinel$ openssl req -x509 -newkey rsa:1024 -keyout server.key -out server.crt -nodes -subj "/C=CN/ST=GD/L=SZ/O=YY/OU=IT/CN=typecodes.com"
 Generating a 1024 bit RSA private key
 ................................++++++
 .........................................................................................++++++
 writing new private key to 'server.key'
 -----
+vfhky@typecodes:~/bin/sentinel$
+
+## 验证生成的证书是否正常
+vfhky@typecodes:~/bin/sentinel$ openssl x509 -in server.crt -text -noout
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number:
+            73:e4:c5:d7:fa:ad:33:24:f0:3c:41:20:ec:7b:98:0b:07:48:bf:a1
+        Signature Algorithm: sha256WithRSAEncryption
+        Issuer: C = cn, ST = cn, L = cn, O = typecodes.com, OU = typcodes
+        Validity
+            Not Before: Jun  3 14:18:01 2024 GMT
+            Not After : Jun  3 14:18:01 2025 GMT
+        Subject: C = cn, ST = cn, L = cn, O = typecodes.com, OU = typcodes
+
+## 验证证书和私钥的匹配的命令
+vfhky@typecodes:~/bin/sentinel$ openssl x509 -noout -modulus -in server.crt | openssl md5
+MD5(stdin)= 909691549e9d583275571c365369fa14
+vfhky@typecodes:~/bin/sentinel$ openssl rsa -noout -modulus -in server.key | openssl md5
+MD5(stdin)= 909691549e9d583275571c365369fa14
+vfhky@typecodes:~/bin/sentinel$
+
+## 根据ssl的错误码查询具体的错误信息
+vfhky@typecodes:~/bin/sentinel$ openssl errstr 140A90A1
+error:140A90A1:SSL routines:SSL_CTX_new:library has no ciphers
 vfhky@typecodes:~/bin/sentinel$
 ```
 
@@ -122,4 +154,3 @@ Email Address	:  Your email address. (You can leave this option blank; simply pr
 A challenge password	:  Leave this option blank (simply press Enter).
 An optional company name	:  Leave this option blank (simply press Enter).
 ```
-
