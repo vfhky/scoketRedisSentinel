@@ -219,16 +219,24 @@ namespace socketRedisSentinel {
         return true;
     }
 
-    // remove first and last character from string
-    std::string Utils::removeFirstAndLastDoubleQuotes(const std::string& str) {
-        std::string strTmp = str;
-        if (!strTmp.empty() && strTmp[0] == '"') {
-            strTmp = strTmp.substr(1);
+    // filter illegal char
+    std::string Utils::filterReqKeyValue(const std::string& str) {
+        if (str.empty()) {
+            return "";
         }
-        if (!strTmp.empty() && strTmp[strTmp.length() - 1] == '"') {
-            strTmp = strTmp.substr(0, strTmp.length() - 1);
+
+        std::stringstream ss;
+        for (uint32_t index = 0; index < str.length(); index++) {
+            char c = str[index];
+
+            if (' ' == c || '"' == c)  {
+                continue;
+            }
+
+            ss << c;
         }
-        return strTmp;
+
+        return ss.str();
     }
 
     int64_t Utils::getMilliSecond() {
@@ -246,8 +254,8 @@ namespace socketRedisSentinel {
 
         size_t pos = 0;
 
-        int32_t maxRecycle = 100;
-        int32_t recycle = 1;
+        const int32_t maxRecycle = 100;
+        int32_t recycle = 0;
 
         try {
             while (recycle < maxRecycle && pos < json.length()) {
@@ -270,7 +278,7 @@ namespace socketRedisSentinel {
                     valueEnd = json.find('}', valueStart);
 
                 std::string value = json.substr(valueStart + 1, valueEnd - valueStart - 1);
-                value = Utils::removeFirstAndLastDoubleQuotes(value);
+                value = Utils::filterReqKeyValue(value);
 
                 jsonData[key] = value;
 
@@ -280,10 +288,10 @@ namespace socketRedisSentinel {
             }
         } catch (const std::exception& e) {
             jsonData.clear();
-            return jsonData;
+            LOG(Debug, "exception ", e.what(), json);
         } catch ( ... ) {
             jsonData.clear();
-            return jsonData;
+            LOG(Debug, "unknown exception ", json);
         }
 
         return jsonData;

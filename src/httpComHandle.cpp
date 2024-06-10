@@ -166,7 +166,7 @@ namespace socketRedisSentinel {
             delete[] buffer;
             evbuffer_drain(input, readSize);
         }
-        LOG(Debug, receivedPostData);
+        LOG(Debug, "===>", receivedPostData);
 
         std::map<std::string, std::string> params;
         std::string contentType = "";

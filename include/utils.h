@@ -304,8 +304,8 @@ namespace socketRedisSentinel {
 
         static bool simpleCheckIpStr(const string &ip);
 
-        // remove first and last character from string
-        static std::string removeFirstAndLastDoubleQuotes(const std::string& str);
+        // filter illegal char
+        static std::string filterReqKeyValue(const std::string& str);
 
         static int64_t getMilliSecond();
 

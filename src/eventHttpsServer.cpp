@@ -56,19 +56,38 @@ namespace socketRedisSentinel {
     }
 
     SSL_CTX *EventHttpsServer::createSslContext(const char *certificatePath, const char *privatePeyPath) {
+        // https://wiki.openssl.org/index.php/Library_Initialization
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+        SSL_library_init();
+#else
+        OPENSSL_init_ssl(0, NULL);
+#endif
+
         SSL_CTX *ctx;
         ctx = SSL_CTX_new(SSLv23_server_method());
 
+        if (!ctx) {
+            unsigned long err = ERR_get_error();
+            char errMsg[256] = {0x00};
+            ERR_error_string_n(err, errMsg, sizeof(errMsg));
+            LOG(Error, "SSL_CTX_new failed", errMsg);
+            return NULL;
+        }
+
         if (!SSL_CTX_use_certificate_file(ctx, certificatePath, SSL_FILETYPE_PEM)) {
-            LOG(Error, "SSL_CTX_use_certificate_file failed", certificatePath, \
-                    evutil_socket_error_to_string(EVUTIL_SOCKET_ERROR()));
+            unsigned long err = ERR_get_error();
+            char errMsg[256] = {0x00};
+            ERR_error_string_n(err, errMsg, sizeof(errMsg));
+            LOG(Error, "SSL_CTX_use_certificate_file failed", certificatePath, errMsg);
             SSL_CTX_free(ctx);
             return NULL;
         }
 
         if (!SSL_CTX_use_PrivateKey_file(ctx, privatePeyPath, SSL_FILETYPE_PEM)) {
-            LOG(Error, "SSL_CTX_use_PrivateKey_file failed", privatePeyPath, \
-                    evutil_socket_error_to_string(EVUTIL_SOCKET_ERROR()));
+            unsigned long err = ERR_get_error();
+            char errMsg[256] = {0x00};
+            ERR_error_string_n(err, errMsg, sizeof(errMsg));
+            LOG(Error, "SSL_CTX_use_PrivateKey_file failed", privatePeyPath, errMsg);
             SSL_CTX_free(ctx);
             return NULL;
         }

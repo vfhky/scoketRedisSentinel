@@ -1,0 +1,154 @@
+name: Build and Release Project
+
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      build:
+        description: 'Perform build?'
+        required: true
+        default: 'true'
+        type: boolean
+
+permissions:
+  contents: write
+  packages: write
+  actions: read
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    if: ${{ github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v') }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, ubuntu-20.04]
+        include:
+          - os: ubuntu-latest
+            artifact_name: ubuntu-latest-x64
+            docker_image: ubuntu:20.04
+          - os: ubuntu-20.04
+            artifact_name: ubuntu-1204-x32
+            docker_image: i386/ubuntu:12.04
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Docker (for Ubuntu 12.04 32-bit)
+      if: matrix.os == 'ubuntu-20.04'
+      run: |
+        sudo apt update
+        sudo apt install -y docker.io
+        sudo systemctl start docker
+        sudo systemctl enable docker
+
+    - name: Install dependencies (for Ubuntu latest)
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        sudo apt update
+        sudo apt install -y libssl-dev openssl wget
+
+    - name: Build project
+      run: |
+        if [ "${{ matrix.os }}" == "ubuntu-20.04" ]; then
+          docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace ${{ matrix.docker_image }} /bin/bash -c "
+            sed -i 's|http://archive.ubuntu.com/ubuntu|http://old-releases.ubuntu.com/ubuntu|g' /etc/apt/sources.list &&
+            apt-get update &&
+            apt-get install -y libssl-dev openssl wget make g++ gcc &&
+            mkdir -p /tmp/libevent &&
+            cd /tmp/libevent &&
+            wget --no-check-certificate -c https://github.com/libevent/libevent/releases/download/release-2.1.12-stable/libevent-2.1.12-stable.tar.gz &&
+            tar -xzf libevent-2.1.12-stable.tar.gz &&
+            cd libevent-2.1.12-stable &&
+            ./configure &&
+            make -j6 &&
+            make install &&
+            ldconfig &&
+            cd /tmp &&
+            rm -rf /tmp/libevent &&
+            cd /workspace/src &&
+            make -j6"
+        else
+          mkdir -p /tmp/libevent
+          cd /tmp/libevent
+          wget --no-check-certificate -c https://github.com/libevent/libevent/releases/download/release-2.1.12-stable/libevent-2.1.12-stable.tar.gz
+          tar -xzf libevent-2.1.12-stable.tar.gz
+          cd libevent-2.1.12-stable
+          ./configure
+          make -j6
+          sudo make install
+          sudo ldconfig
+          cd /tmp
+          rm -rf /tmp/libevent
+          cd $GITHUB_WORKSPACE/src
+          make -j6
+        fi
+
+    - name: Archive build artifacts
+      run: |
+        mkdir -p /tmp/artifacts
+        cp -r bin/* /tmp/artifacts/
+        tar -czf /tmp/${{ matrix.artifact_name }}.tar.gz -C /tmp artifacts
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.artifact_name }}
+        path: /tmp/${{ matrix.artifact_name }}.tar.gz
+
+  release:
+    runs-on: ubuntu-latest
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Download Artifacts from build-latest
+      uses: actions/download-artifact@v4
+      with:
+        name: ubuntu-latest-x64
+        path: ./artifacts
+
+    - name: Download Artifacts from build-ubuntu1204
+      uses: actions/download-artifact@v4
+      with:
+        name: ubuntu-1204-x32
+        path: ./artifacts
+
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1.1.4
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref_name }}
+        release_name: ${{ github.ref_name }}
+        draft: false
+        prerelease: false
+
+    - name: Upload Release Asset (ubuntu-latest-x64)
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./artifacts/ubuntu-latest-x64.tar.gz
+        asset_name: ubuntu-latest-x64.tar.gz
+        asset_content_type: application/gzip
+        
+    - name: Upload Release Asset (ubuntu-1204-x32)
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./artifacts/ubuntu-1204-x32.tar.gz
+        asset_name: ubuntu-1204-x32.tar.gz
+        asset_content_type: application/gzip
